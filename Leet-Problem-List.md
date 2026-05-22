@@ -148,7 +148,7 @@
 | 2252       | Dynamic Pivoting of a Table                                       | Hard       |
 | 2253       | Dynamic Unpivoting of a Table                                     | Hard       |
 | 2362       | Generate the Invoice                                              | Hard       |
-| 2474       | [Customers With Strictly Increasing Purchases](https://github.com/yadavraganu/Data-Engineering/blob/main/SQL/Leet-Code-Hard.md#2474-customers-with-strictly-increasing-purchases)                      | Hard       |
+| 2474       | [Customers With Strictly Increasing Purchases](https://github.com/yadavraganu/SQL-Problem-Solving/blob/main/Leet-Code-Hard.md#2474-customers-with-strictly-increasing-purchases)                      | Hard       |
 | 2494       | Merge Overlapping Events in the Same Hall                         | Hard       |
 | 2701       | Consecutive Transactions with Increasing Amounts                  | Hard       |
 | 2720       | Popularity Percentage                                             | Hard       |
