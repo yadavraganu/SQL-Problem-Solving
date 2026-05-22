@@ -21,7 +21,7 @@
 | 619        | Biggest Single Number                                             | Easy       |
 | 620        | Not Boring Movies                                                 | Easy       |
 | 627        | Swap Sex of Employees                                             | Easy       |
-| 1050       |[Actors and Directors Who Cooperated At Least Three Times](https://github.com/yadavraganu/Data-Engineering/blob/main/SQL/Leet-Code-Easy.md#1050-actors-and-directors-who-cooperated-at-least-three-times)          | Easy       |
+| 1050       |[Actors and Directors Who Cooperated At Least Three Times](https://github.com/yadavraganu/SQL-Problem-Solving/blob/main/Leet-Code-Easy.md#1050-actors-and-directors-who-cooperated-at-least-three-times)          | Easy       |
 | 1068       | Product Sales Analysis I                                          | Easy       |
 | 1069       | Product Sales Analysis II                                         | Easy       |
 | 1075       | Project Employees I                                               | Easy       |
