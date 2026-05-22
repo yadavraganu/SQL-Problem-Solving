@@ -1,3 +1,4 @@
+# SQL Problem Solving - Easy Level
 | Problem ID | Problem Title                                                     | Difficulty | Link |
 |------------|-------------------------------------------------------------------|------------|------|
 | 175        | Combine Two Tables                                                | Easy       | [View](https://github.com/yadavraganu/SQL-Problem-Solving/blob/main/Leet-Code-Easy.md#combine-two-tables) |
@@ -113,6 +114,9 @@
 | 3465       | Find Products with Valid Serial Numbers                           | Easy       | [View](https://github.com/yadavraganu/SQL-Problem-Solving/blob/main/Leet-Code-Easy.md#3465-find-products-with-valid_serial-numbers) |
 | 3570       | Find Books with No Available Copies                               | Easy       | [View](https://github.com/yadavraganu/SQL-Problem-Solving/blob/main/Leet-Code-Easy.md#3570-find-books-with-no-available-copies) |
 | 3793       | Find Users with High Token Usage                                  | Easy       | [View](https://github.com/yadavraganu/SQL-Problem-Solving/blob/main/Leet-Code-Easy.md#3793-find-users-with-high-token-usage) |
+# SQL Problem Solving - Medium Level
+| Problem ID | Problem Title                                                     | Difficulty | Link |
+|------------|-------------------------------------------------------------------|------------|------|
 | 176        | Second Highest Salary                                             | Medium     | [View](https://github.com/yadavraganu/SQL-Problem-Solving/blob/main/Leet-Code-Medium.md#176-second-highest-salary) |
 | 177        | Nth Highest Salary                                                | Medium     | [View](https://github.com/yadavraganu/SQL-Problem-Solving/blob/main/Leet-Code-Medium.md#177-nth-highest-salary) |
 | 178        | Rank Scores                                                       | Medium     | [View](https://github.com/yadavraganu/SQL-Problem-Solving/blob/main/Leet-Code-Medium.md#178-rank-scores) |
@@ -258,6 +262,10 @@
 | 3705       | Find Golden Hour Customers                                        | Medium     | [View](https://github.com/yadavraganu/SQL-Problem-Solving/blob/main/Leet-Code-Medium.md#3705-find-golden-hour-customers) |
 | 3716       | Find Churn Risk Customers                                         | Medium     | [View](https://github.com/yadavraganu/SQL-Problem-Solving/blob/main/Leet-Code-Medium.md#3716-find-churn-risk-customers) |
 | 3808       | Find Emotionally Consistent Users                                 | Medium     | [View](https://github.com/yadavraganu/SQL-Problem-Solving/blob/main/Leet-Code-Medium.md#3808-find-emotionally-consistent-users) |
+
+# SQL Problem Solving - Hard Level
+| Problem ID | Problem Title                                                     | Difficulty | Link |
+|------------|-------------------------------------------------------------------|------------|------|
 | 185        | Department Top Three Salaries                                     | Hard       | [View](https://github.com/yadavraganu/SQL-Problem-Solving/blob/main/Leet-Code-Hard.md#185-department-top-three-salaries) |
 | 262        | Trips and Users                                                   | Hard       | [View](https://github.com/yadavraganu/SQL-Problem-Solving/blob/main/Leet-Code-Hard.md#262-trips-and-users) |
 | 569        | Median Employee Salary                                            | Hard       | [View](https://github.com/yadavraganu/SQL-Problem-Solving/blob/main/Leet-Code-Hard.md#569-medianEmployeeSalary) |
