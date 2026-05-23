@@ -3033,6 +3033,54 @@ ORDER BY 1;
 ```
 
 # [3053. Classifying Triangles by Lengths](https://leetcode.com/problems/classifying-triangles-by-lengths/)
+```
+Table: Triangles
++-------------+------+ 
+| Column Name | Type | 
++-------------+------+ 
+| A           | int  | 
+| B           | int  |
+| C           | int  |
++-------------+------+
+(A, B, C) is the primary key for this table.
+Each row include the lengths of each of a triangle's three sides.
+Write a query to find the type of triangle. Output one of the following for each row:
+
+Equilateral: It's a triangle with 3 sides of equal length.
+Isosceles: It's a triangle with 2 sides of equal length.
+Scalene: It's a triangle with 3 sides of differing lengths.
+Not A Triangle: The given values of A, B, and C don't form a triangle.
+
+Return the result table in any order.
+The result format is in the following example.
+
+Example 1:
+
+Input: 
+Triangles table:
++----+----+----+
+| A  | B  | C  |
++----+----+----+
+| 20 | 20 | 23 |
+| 20 | 20 | 20 |
+| 20 | 21 | 22 |
+| 13 | 14 | 30 |
++----+----+----+
+Output: 
++----------------+
+| triangle_type  | 
++----------------+
+| Isosceles      | 
+| Equilateral    |
+| Scalene        |
+| Not A Triangle |
++----------------+
+Explanation: 
+- Values in the first row from an Isosceles triangle, because A = B.
+- Values in the second row from an Equilateral triangle, because A = B = C.
+- Values in the third row from an Scalene triangle, because A != B != C.
+- Values in the fourth row cannot form a triangle, because the combined value of sides A and B is not larger than that of side C.
+```
 ```sql
 SELECT
   CASE
@@ -3046,6 +3094,45 @@ FROM
 ```
 
 # [3059. Find All Unique Email Domains](https://leetcode.com/problems/find-all-unique-email-domains/)
+```
+Table: Emails
++-------------+---------+
+| Column Name | Type    |
++-------------+---------+
+| id          | int     |
+| email       | varchar |
++-------------+---------+
+id is the primary key (column with unique values) for this table.
+Each row of this table contains an email. The emails will not contain uppercase letters.
+Write a solution to find all unique email domains and count the number of individuals associated with each domain. Consider only those domains that end with .com.
+
+Return the result table orderd by email domains in ascending order.
+The result format is in the following example.
+Example 1:
+
+Input: 
+Emails table:
++-----+-----------------------+
+| id  | email                 |
++-----+-----------------------+
+| 336 | hwkiy@test.edu        |
+| 489 | adcmaf@outlook.com    |
+| 449 | vrzmwyum@yahoo.com    |
+| 95  | tof@test.edu          |
+| 320 | jxhbagkpm@example.org |
+| 411 | zxcf@outlook.com      |
++----+------------------------+
+Output: 
++--------------+-------+
+| email_domain | count |
++--------------+-------+
+| outlook.com  | 2     |
+| yahoo.com    | 1     |  
++--------------+-------+
+Explanation: 
+- The valid domains ending with ".com" are only "outlook.com" and "yahoo.com", with respective counts of 2 and 1.
+Output table is ordered by email_domains in ascending order.
+```
 ```sql
 SELECT
   SUBSTRING(EMAIL, CHARINDEX('@', EMAIL) + 1, LEN(EMAIL)) AS EMAIL_DOMAIN,
@@ -3061,6 +3148,48 @@ ORDER BY
 ```
 
 # [3150. Invalid Tweets II](https://leetcode.com/problems/invalid-tweets-ii/)
+```
+Table: Tweets
++----------------+---------+
+| Column Name    | Type    |
+|----------------|---------|
+| tweet_id       | int     |
+| content        | varchar |
++----------------+---------+
+tweet_id is the primary key (column with unique values) for this table.
+This table contains all the tweets in a social media app.
+Write a solution to find invalid tweets. A tweet is considered invalid if it meets any of the following criteria:
+
+It exceeds 140 characters in length.
+It has more than 3 mentions.
+It includes more than 3 hashtags.
+
+Return the result table ordered by tweet_id in ascending order.
+The result format is in the following example.
+Example:
+
+Input:
+Tweets table:
++----------+-----------------------------------------------------------------------------------+
+| tweet_id | content                                                                           |
++----------+-----------------------------------------------------------------------------------+
+| 1        | Traveling, exploring, and living my best life @JaneSmith @SaraJohnson @LisaTaylor |
+|          | @MikeBrown #Foodie #Fitness #Learning                                             | 
+| 2        | Just had the best dinner with friends! #Foodie #Friends #Fun                      |
+| 4        | Working hard on my new project #Work #Goals #Productivity #Fun                    |
++----------+-----------------------------------------------------------------------------------+
+  
+Output:
++----+
+| 1  |
+| 4  |
++----+
+ 
+Explanation:
+tweet_id 1 contains 4 mentions.
+tweet_id 4 contains 4 hashtags.
+Output table is ordered by tweet_id in ascending order.
+```
 ```sql
 SELECT
   TWEET_ID
@@ -3151,6 +3280,27 @@ ORDER BY
 ```
 
 # [3198. Find Cities in Each State](https://leetcode.com/problems/find-cities-in-each-state/)
+```
+Table: cities
++-------------+---------+
+| state       | varchar |
+| city        | varchar |
++-------------+---------+
+
+Output:
++-------------+---------------------------------------+
+| state       | city                                  |
++-------------+--------------------------------------+
+| California  | Los Angeles, San Diego, San Francisco |
+| New York    | Buffalo, New York City, Rochester     |
+| Texas       | Austin, Dallas, Houston               |
++-------------+---------------------------------------+
+Explanation:
+
+California: All cities ("Los Angeles", "San Diego", "San Francisco") are listed in a comma-separated string.
+New York: All cities ("Buffalo", "New York City", "Rochester") are listed in a comma-separated string.
+Texas: All cities ("Austin", "Dallas", "Houston") are listed in a comma-separated string.
+```
 ```sql
 SELECT
     STATE,
@@ -3161,6 +3311,59 @@ ORDER BY STATE;
 ```
 
 # [3246. Premier League Table Ranking](https://leetcode.com/problems/premier-league-table-ranking/)
+```
+Table: TeamStats
++------------------+---------+
+| Column Name      | Type    |
++------------------+---------+
+| team_id          | int     |
+| team_name        | varchar |
+| matches_played   | int     |
+| wins             | int     |
+| draws            | int     |
+| losses           | int     |
++------------------+---------+
+team_id is the unique key for this table.
+This table contains team id, team name, matches_played, wins, draws, and losses.
+Write a solution to calculate the points and rank for each team in the league. Points are calculated as follows:
+
+3 points for a win
+1 point for a draw
+0 points for a loss
+Note: Teams with the same points must be assigned the same rank.
+Return the result table ordered by points in descending, and then by team_name in ascending order.
+The query result format is in the following example.
+
+Example:
+Input:
+TeamStats table:
++---------+-----------------+----------------+------+-------+--------+
+| team_id | team_name       | matches_played | wins | draws | losses |
++---------+-----------------+----------------+------+-------+--------+
+| 1       | Manchester City | 10             | 6    | 2     | 2      |
+| 2       | Liverpool       | 10             | 6    | 2     | 2      |
+| 3       | Chelsea         | 10             | 5    | 3     | 2      |
+| 4       | Arsenal         | 10             | 4    | 4     | 2      |
+| 5       | Tottenham       | 10             | 3    | 5     | 2      |
++---------+-----------------+----------------+------+-------+--------+
+Output:
++---------+-----------------+--------+----------+
+| team_id | team_name       | points | position |
++---------+-----------------+--------+----------+
+| 2       | Liverpool       | 20     | 1        |
+| 1       | Manchester City | 20     | 1        |
+| 3       | Chelsea         | 18     | 3        |
+| 4       | Arsenal         | 16     | 4        |
+| 5       | Tottenham       | 14     | 5        |
++---------+-----------------+--------+----------+
+Explanation:
+
+Manchester City and Liverpool both have 20 points (6 wins * 3 points + 2 draws * 1 point), so they share position 1.
+Chelsea has 18 points (5 wins * 3 points + 3 draws * 1 point) and is position 3rd.
+Arsenal has 16 points (4 wins * 3 points + 4 draws * 1 point) and is position 4th.
+Tottenham has 14 points (3 wins * 3 points + 5 draws * 1 point) and is position 5th.
+The output table is ordered by points in descending order, then by team_name in ascending order.
+```
 ```sql
 SELECT
     TEAM_ID,
