@@ -4342,43 +4342,74 @@ The result is ordered by hierarchy_level ascending, and then by subordinate_id a
 Note: The output is ordered first by hierarchy_level in ascending order, then by subordinate_id in ascending order.
 ```
 ```sql
-WITH T AS (
-    -- Base case: top-level manager(s)
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS EMPLOYEES;
+GO
+
+CREATE TABLE EMPLOYEES (
+    EMPLOYEE_ID   INT PRIMARY KEY,
+    EMPLOYEE_NAME VARCHAR(50) NOT NULL,
+    MANAGER_ID    INT NULL,
+    SALARY        INT NOT NULL
+);
+
+GO
+
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO EMPLOYEES (EMPLOYEE_ID, EMPLOYEE_NAME, MANAGER_ID, SALARY) VALUES
+(1, 'Alice',   NULL, 150000),
+(2, 'Bob',     1,    120000),
+(3, 'Charlie', 1,    110000),
+(4, 'David',   2,    105000),
+(5, 'Eve',     2,    100000),
+(6, 'Frank',   3,     95000),
+(7, 'Grace',   3,     98000),
+(8, 'Helen',   5,     90000);
+GO
+
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM EMPLOYEES;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
+WITH HIERARCHY AS (
+    -- BASE CASE: CEO
     SELECT
-        EMPLOYEE_ID,
-        EMPLOYEE_NAME,
         0 AS HIERARCHY_LEVEL,
-        MANAGER_ID,
-        SALARY
-    FROM EMPLOYEES
-    WHERE MANAGER_ID IS NULL
+        E.EMPLOYEE_ID AS EMPLOYEE_ID,
+        E.EMPLOYEE_NAME AS EMPLOYEE_NAME,
+        0 AS SALARY_DIFFERENCE_FROM_CEO,
+        E.SALARY AS CEO_SALARY
+    FROM EMPLOYEES E
+    WHERE E.MANAGER_ID IS NULL
 
     UNION ALL
 
-    -- Recursive case: employees reporting to those in T
+    -- RECURSIVE CASE: SUBORDINATES
     SELECT
-        E.EMPLOYEE_ID,
-        E.EMPLOYEE_NAME,
-        T.HIERARCHY_LEVEL + 1 AS HIERARCHY_LEVEL,
-        E.MANAGER_ID,
-        E.SALARY
-    FROM T
-    JOIN EMPLOYEES E ON T.EMPLOYEE_ID = E.MANAGER_ID
-),
-P AS (
-    SELECT SALARY
-    FROM EMPLOYEES
-    WHERE MANAGER_ID IS NULL
+        H.HIERARCHY_LEVEL + 1 AS HIERARCHY_LEVEL,
+        E.EMPLOYEE_ID AS EMPLOYEE_ID,
+        E.EMPLOYEE_NAME AS EMPLOYEE_NAME,
+        E.SALARY - H.CEO_SALARY AS SALARY_DIFFERENCE_FROM_CEO,
+        H.CEO_SALARY
+    FROM EMPLOYEES E
+    INNER JOIN HIERARCHY H
+        ON E.MANAGER_ID = H.EMPLOYEE_ID
 )
-SELECT
-    T.EMPLOYEE_ID AS SUBORDINATE_ID,
-    T.EMPLOYEE_NAME AS SUBORDINATE_NAME,
-    T.HIERARCHY_LEVEL,
-    T.SALARY - P.SALARY AS SALARY_DIFFERENCE
-FROM T
-CROSS JOIN P
-WHERE T.HIERARCHY_LEVEL != 0
-ORDER BY T.HIERARCHY_LEVEL, T.EMPLOYEE_ID;
+SELECT 
+    EMPLOYEE_ID AS SUBORDINATE_ID,
+    EMPLOYEE_NAME AS SUBORDINATE_NAME,
+	HIERARCHY_LEVEL AS HIERARCHY_LEVEL,
+    SALARY_DIFFERENCE_FROM_CEO AS SALARY_DIFFERENCE
+FROM HIERARCHY
+WHERE HIERARCHY_LEVEL <> 0
+ORDER BY HIERARCHY_LEVEL, EMPLOYEE_NAME;
 ```
 
 # [3268. Find Overlapping Shifts II](https://leetcode.com/problems/find-overlapping-shifts-ii/)
