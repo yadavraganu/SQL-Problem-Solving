@@ -39,23 +39,58 @@ Player 1 and 3 installed the game on 2016-03-01 but only player 1 logged back in
 Player 2 installed the game on 2017-06-25 but didn't log back in on 2017-06-26 so the day 1 retention of 2017-06-25 is 0 / 1 = 0.00
 ```
 ```sql
-WITH  PLAYERTOINSTALLDATE AS (
-    SELECT PLAYER_ID, MIN(EVENT_DATE) AS INSTALL_DT
-    FROM ACTIVITY
-    GROUP BY PLAYER_ID
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS PLAYER_ACTIVITY;
+GO
+
+CREATE TABLE PLAYER_ACTIVITY (
+    PLAYER_ID INT,
+    DEVICE_ID INT,
+    EVENT_DATE DATE,
+    GAMES_PLAYED INT
+);
+GO
+
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO PLAYER_ACTIVITY (PLAYER_ID, DEVICE_ID, EVENT_DATE, GAMES_PLAYED)
+VALUES
+(1, 2, '2016-03-01', 5),
+(1, 2, '2016-03-02', 6),
+(2, 3, '2017-06-25', 1),
+(3, 1, '2016-03-01', 0),
+(3, 4, '2016-07-03', 5);
+GO
+
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM PLAYER_ACTIVITY;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
+-- Calculate Day 1 retention by install date
+WITH INSTALL_DATA AS (
+    SELECT 
+        PLAYER_ID,
+        EVENT_DATE AS INSTALL_DT, -- first login date
+        LEAD(EVENT_DATE) OVER (PARTITION BY PLAYER_ID ORDER BY EVENT_DATE) AS NEXT_LOGIN, -- next login date
+        ROW_NUMBER() OVER (PARTITION BY PLAYER_ID ORDER BY EVENT_DATE) AS RNK -- rank to identify first login
+    FROM PLAYER_ACTIVITY
 )
 SELECT 
-    PLAYERTOINSTALLDATE.INSTALL_DT,
-    COUNT(*) AS INSTALLS,
+    INSTALL_DT,                          -- install date
+    COUNT(*) AS INSTALLS,                -- number of installs on that date
     ROUND(
-        CAST(SUM(IIF(DATEDIFF(DAY, PLAYERTOINSTALLDATE.INSTALL_DT, ACTIVITY.EVENT_DATE) = 1, 1, 0)) AS FLOAT) / COUNT(*),
-        2
+        SUM(CASE WHEN DATEDIFF(DAY, INSTALL_DT, NEXT_LOGIN) = 1 THEN 1 ELSE 0 END) 
+        * 1.0 / COUNT(*), 2              -- fraction of players returning next day
     ) AS DAY1_RETENTION
-FROM PLAYERTOINSTALLDATE
-LEFT JOIN ACTIVITY
-    ON PLAYERTOINSTALLDATE.PLAYER_ID = ACTIVITY.PLAYER_ID
-    AND DATEDIFF(DAY, PLAYERTOINSTALLDATE.INSTALL_DT, ACTIVITY.EVENT_DATE) = 1
-GROUP BY PLAYERTOINSTALLDATE.INSTALL_DT;
+FROM INSTALL_DATA
+WHERE RNK = 1                            -- only consider first login per player
+GROUP BY INSTALL_DT;                     -- group results by install date
 ```
 
 # [1127. User Purchase Platform](https://leetcode.com/problems/user-purchase-platform/)
