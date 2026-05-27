@@ -4193,60 +4193,49 @@ Explanation:
 Note: Output table is sorted in descending order by count and hashtag respectively.
 ```
 ```sql
-WITH RECURSIVE
-  FEBRUARYTWEETS AS (
-    SELECT * FROM TWEETS
-    WHERE YEAR(TWEET_DATE) = 2024 AND MONTH(TWEET_DATE) = 2
-  ),
-  HASHTAGTOTWEET AS (
-    -- ANCHOR MEMBER: FIND THE FIRST HASHTAG AND THE REMAINING TWEET TEXT
+-- Recursive CTE to extract hashtags from tweets
+WITH TAGS AS (
+    -- Base case: extract first hashtag from each tweet
     SELECT
-      SUBSTRING(TWEET, PATINDEX('%#[^ ]%', TWEET), CHARINDEX(' ', TWEET + ' ', PATINDEX('%#[^ ]%', TWEET)) - PATINDEX('%#[^ ]%', TWEET)) AS HASHTAG,
-      SUBSTRING(TWEET, PATINDEX('%#[^ ]%', TWEET) + CHARINDEX(' ', TWEET + ' ', PATINDEX('%#[^ ]%', TWEET)) - PATINDEX('%#[^ ]%', TWEET), LEN(TWEET)) AS TWEET
-    FROM FEBRUARYTWEETS
-    WHERE PATINDEX('%#[^ ]%', TWEET) > 0
+        -- Extract hashtag (from '#' to next space or end of string)
+        CASE 
+            WHEN CHARINDEX(' ', TWEET, CHARINDEX('#', TWEET) + 1) = 0 
+                THEN SUBSTRING(TWEET, CHARINDEX('#', TWEET), LEN(TWEET) - CHARINDEX('#', TWEET) + 1)
+            ELSE SUBSTRING(TWEET, CHARINDEX('#', TWEET), CHARINDEX(' ', TWEET, CHARINDEX('#', TWEET)) - CHARINDEX('#', TWEET))
+        END AS HASH_TAG,
+        -- Remaining text after the hashtag
+        CASE 
+            WHEN CHARINDEX(' ', TWEET, CHARINDEX('#', TWEET)) = 0 
+                THEN ''
+            ELSE SUBSTRING(TWEET, CHARINDEX(' ', TWEET, CHARINDEX('#', TWEET)) + 1, LEN(TWEET) - CHARINDEX(' ', TWEET, CHARINDEX('#', TWEET)))
+        END AS TWEET
+    FROM TWEETS
+    WHERE CHARINDEX('#', TWEET) > 0
 
     UNION ALL
 
-    -- RECURSIVE MEMBER: FIND THE NEXT HASHTAG AND THE REMAINING TWEET TEXT
+    -- Recursive case: extract next hashtag from remaining text
     SELECT
-      SUBSTRING(TWEET, PATINDEX('%#[^ ]%', TWEET), CHARINDEX(' ', TWEET + ' ', PATINDEX('%#[^ ]%', TWEET)) - PATINDEX('%#[^ ]%', TWEET)) AS HASHTAG,
-      SUBSTRING(TWEET, PATINDEX('%#[^ ]%', TWEET) + CHARINDEX(' ', TWEET + ' ', PATINDEX('%#[^ ]%', TWEET)) - PATINDEX('%#[^ ]%', TWEET), LEN(TWEET)) AS TWEET
-    FROM HASHTAGTOTWEET
-    WHERE PATINDEX('%#[^ ]%', TWEET) > 0
-  )
-SELECT
-  HASHTAG,
-  COUNT(*) AS COUNT
-FROM HASHTAGTOTWEET
-GROUP BY HASHTAG
-ORDER BY COUNT DESC, HASHTAG DESC
-LIMIT 3;
----------------
-WITH RECURSIVE
-  FEBRUARYTWEETS AS (
-    SELECT * FROM TWEETS
-    WHERE YEAR(TWEET_DATE) = 2024 AND MONTH(TWEET_DATE) = 2
-  ),
-  HASHTAGTOTWEET AS (
-    SELECT
-      REGEXP_SUBSTR(TWEET, '#[^\\s]+') AS HASHTAG,
-      REGEXP_REPLACE(TWEET, '#[^\\s]+', '', 1, 1) AS TWEET
-    FROM FEBRUARYTWEETS
-    UNION ALL
-    SELECT
-      REGEXP_SUBSTR(TWEET, '#[^\\s]+') AS HASHTAG,
-      REGEXP_REPLACE(TWEET, '#[^\\s]+', '', 1, 1) AS TWEET
-    FROM HASHTAGTOTWEET
-    WHERE POSITION('#' IN TWEET) > 0
-  )
-SELECT
-  HASHTAG,
-  COUNT(*) AS COUNT
-FROM HASHTAGTOTWEET
-GROUP BY HASHTAG
-ORDER BY COUNT DESC, HASHTAG DESC
-LIMIT 3;
+        CASE 
+            WHEN CHARINDEX(' ', TWEET, CHARINDEX('#', TWEET) + 1) = 0 
+                THEN SUBSTRING(TWEET, CHARINDEX('#', TWEET), LEN(TWEET) - CHARINDEX('#', TWEET) + 1)
+            ELSE SUBSTRING(TWEET, CHARINDEX('#', TWEET), CHARINDEX(' ', TWEET, CHARINDEX('#', TWEET)) - CHARINDEX('#', TWEET))
+        END AS HASH_TAG,
+        CASE 
+            WHEN CHARINDEX(' ', TWEET, CHARINDEX('#', TWEET)) = 0 
+                THEN ''
+            ELSE SUBSTRING(TWEET, CHARINDEX(' ', TWEET, CHARINDEX('#', TWEET)) + 1, LEN(TWEET) - CHARINDEX(' ', TWEET, CHARINDEX('#', TWEET)))
+        END AS TWEET
+    FROM TAGS
+    WHERE CHARINDEX('#', TWEET) > 0
+)
+
+-- Final aggregation: count hashtags and return top 3
+SELECT HASH_TAG, COUNT(*) AS CNT
+FROM TAGS
+GROUP BY HASH_TAG
+ORDER BY CNT DESC, HASH_TAG DESC
+OFFSET 0 ROWS FETCH NEXT 3 ROWS ONLY;
 ```
 
 # [3156. Employee Task Duration and Concurrent Tasks](https://leetcode.com/problems/employee-task-duration-and-concurrent-tasks/)
