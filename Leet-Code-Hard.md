@@ -4193,6 +4193,40 @@ Explanation:
 Note: Output table is sorted in descending order by count and hashtag respectively.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS TWEETS;
+GO
+
+CREATE TABLE TWEETS (
+    USER_ID INT,
+    TWEET_ID INT PRIMARY KEY,
+    TWEET VARCHAR(255),
+    TWEET_DATE DATE
+);
+GO
+
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO TWEETS (USER_ID, TWEET_ID, TWEET, TWEET_DATE) VALUES
+(135, 13, 'Enjoying a great start to the day. #HappyDay #MorningVibes', '2024-02-01'),
+(136, 14, 'Another #HappyDay with good vibes! #FeelGood', '2024-02-03'),
+(137, 15, 'Productivity peaks! #WorkLife #ProductiveDay', '2024-02-04'),
+(138, 16, 'Exploring new tech frontiers. #TechLife #Innovation', '2024-02-04'),
+(139, 17, 'Gratitude for today''s moments. #HappyDay #Thankful', '2024-02-05'),
+(140, 18, 'Innovation drives us. #TechLife #FutureTech', '2024-02-07'),
+(141, 19, 'Connecting with nature''s serenity. #Nature #Peaceful', '2024-02-09');
+GO
+
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM TWEETS;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
 -- Recursive CTE to extract hashtags from tweets
 WITH TAGS AS (
     -- Base case: extract first hashtag from each tweet
@@ -4231,10 +4265,10 @@ WITH TAGS AS (
 )
 
 -- Final aggregation: count hashtags and return top 3
-SELECT HASH_TAG, COUNT(*) AS CNT
+SELECT HASH_TAG AS HASHTAG, COUNT(*) AS COUNT
 FROM TAGS
 GROUP BY HASH_TAG
-ORDER BY CNT DESC, HASH_TAG DESC
+ORDER BY COUNT DESC, HASH_TAG DESC
 OFFSET 0 ROWS FETCH NEXT 3 ROWS ONLY;
 ```
 
