@@ -136,6 +136,92 @@ On 2019-07-01, user 1 purchased using both desktop and mobile, user 2 purchased 
 On 2019-07-02, user 2 purchased using mobile only, user 3 purchased using desktop only and no one purchased using both platforms.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS SPENDS;
+GO
+
+CREATE TABLE SPENDS (
+    USER_ID INT,
+    SPEND_DATE DATE,
+    PLATFORM VARCHAR(20),
+    AMOUNT INT
+);
+
+GO
+
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO SPENDS (USER_ID, SPEND_DATE, PLATFORM, AMOUNT) VALUES
+(1, '2019-07-01', 'mobile', 100),
+(1, '2019-07-01', 'desktop', 100),
+(2, '2019-07-01', 'mobile', 100),
+(2, '2019-07-02', 'mobile', 100),
+(3, '2019-07-01', 'desktop', 100),
+(3, '2019-07-02', 'desktop', 100);
+GO
+
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM SPENDS;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
+-- Step 1: Identify device usage per user per date
+WITH DEVICE_IND AS (
+    SELECT 
+        USER_ID,
+        SPEND_DATE,
+        SUM(AMOUNT) AS TOTAL_AMOUNT,
+        MAX(CASE WHEN UPPER(PLATFORM) = 'MOBILE'  THEN 1 ELSE 0 END) AS MOB_IND,
+        MAX(CASE WHEN UPPER(PLATFORM) = 'DESKTOP' THEN 1 ELSE 0 END) AS DESK_IND,
+        CASE 
+            WHEN MAX(CASE WHEN UPPER(PLATFORM) = 'MOBILE'  THEN 1 ELSE 0 END) = 1
+             AND MAX(CASE WHEN UPPER(PLATFORM) = 'DESKTOP' THEN 1 ELSE 0 END) = 1 
+            THEN 1 ELSE 0 
+        END AS BOTH_IND
+    FROM SPENDS
+    GROUP BY USER_ID, SPEND_DATE
+),
+
+-- Step 2: Build mapping of all spend dates × all device categories
+SPEND_DATE_DEVICE_MAP AS (
+    SELECT SPEND_DATE, PLATFORM
+    FROM (SELECT DISTINCT SPEND_DATE FROM DEVICE_IND) A
+    CROSS JOIN (
+        SELECT 'Mobile' AS PLATFORM 
+        UNION SELECT 'Desktop' 
+        UNION SELECT 'Both'
+    ) B
+),
+
+-- Step 3: Aggregate spend and user counts by device type
+DERIVED_DATA AS (
+    SELECT SPEND_DATE, 'Mobile' AS PLATFORM, SUM(TOTAL_AMOUNT) AS TOTAL_AMOUNT, COUNT(*) AS TOTAL_USER
+    FROM DEVICE_IND WHERE MOB_IND = 1 AND BOTH_IND = 0 GROUP BY SPEND_DATE
+    UNION
+    SELECT SPEND_DATE, 'Desktop' AS PLATFORM, SUM(TOTAL_AMOUNT), COUNT(*)
+    FROM DEVICE_IND WHERE DESK_IND = 1 AND BOTH_IND = 0 GROUP BY SPEND_DATE
+    UNION
+    SELECT SPEND_DATE, 'Both' AS PLATFORM, SUM(TOTAL_AMOUNT), COUNT(*)
+    FROM DEVICE_IND WHERE BOTH_IND = 1 GROUP BY SPEND_DATE
+)
+
+-- Step 4: Join mapping with derived data to ensure all categories appear
+SELECT 
+    A.SPEND_DATE,
+    A.PLATFORM,
+    ISNULL(B.TOTAL_AMOUNT,0) AS TOTAL_AMOUNT,
+    ISNULL(B.TOTAL_USER,0)   AS TOTAL_USER
+FROM SPEND_DATE_DEVICE_MAP A
+LEFT JOIN DERIVED_DATA B 
+    ON A.SPEND_DATE = B.SPEND_DATE 
+   AND A.PLATFORM   = B.PLATFORM
+ORDER BY A.SPEND_DATE, A.PLATFORM DESC;
+-----------------------------------------------------
 WITH USERTOAMOUNT AS (
     SELECT
         USER_ID,
@@ -145,15 +231,15 @@ WITH USERTOAMOUNT AS (
             ELSE MAX(PLATFORM)
         END AS PLATFORM,
         SUM(AMOUNT) AS AMOUNT
-    FROM SPENDING
+    FROM SPENDS
     GROUP BY USER_ID, SPEND_DATE
 ),
 DATEANDPLATFORMS AS (
-    SELECT DISTINCT SPEND_DATE, 'desktop' AS PLATFORM FROM SPENDING
+    SELECT DISTINCT SPEND_DATE, 'desktop' AS PLATFORM FROM SPENDS
     UNION ALL
-    SELECT DISTINCT SPEND_DATE, 'mobile' FROM SPENDING
+    SELECT DISTINCT SPEND_DATE, 'mobile' AS PLATFORM FROM SPENDS
     UNION ALL
-    SELECT DISTINCT SPEND_DATE, 'both' FROM SPENDING
+    SELECT DISTINCT SPEND_DATE, 'both' AS PLATFORM FROM SPENDS
 )
 SELECT
     DP.SPEND_DATE,
@@ -163,7 +249,7 @@ SELECT
 FROM DATEANDPLATFORMS DP
 LEFT JOIN USERTOAMOUNT UA
     ON DP.SPEND_DATE = UA.SPEND_DATE AND DP.PLATFORM = UA.PLATFORM
-GROUP BY DP.SPEND_DATE, DP.PLATFORM;
+GROUP BY DP.SPEND_DATE, DP.PLATFORM ORDER BY 1 ,2 DESC;
 ```
 
 # [1159. Market Analysis II](https://leetcode.com/problems/market-analysis-ii/)
