@@ -353,69 +353,67 @@ LEFT JOIN ITEMS AS I
 ```
 
 # [1194. Tournament Winners](https://leetcode.com/problems/tournament-winners/)
-#### Schema
-
+```
 Table: Players
-
-| Column Name | Type |
-|-------------|------|
-| player_id   | int  |
-| group_id    | int  |
-
-player_id is the primary key for this table.
-
++-------------+-------+
+| Column Name | Type  |
++-------------+-------+
+| player_id   | int   |
+| group_id    | int   |
++-------------+-------+
+player_id is the primary key of this table.
+Each row of this table indicates the group of each player.
 Table: Matches
++---------------+---------+
+| Column Name   | Type    |
++---------------+---------+
+| match_id      | int     |
+| first_player  | int     |
+| second_player | int     |
+| first_score   | int     |
+| second_score  | int     |
++---------------+---------+
+match_id is the primary key of this table.
+Each row is a record of a match, first_player and second_player contain the player_id of each match.
+first_score and second_score contain the number of points of the first_player and second_player respectively.
+You may assume that, in each match, players belongs to the same group.
+The winner in each group is the player who scored the maximum total points within the group. In the case of a tie, the lowest player_id wins.
 
-| Column Name   | Type |
-|---------------|------|
-| match_id      | int  |
-| first_player  | int  |
-| second_player | int  |
-| first_score   | int  |
-| second_score  | int  |
-
-match_id is the primary key for this table.
-
-#### Description
-
-Given the results of matches in a tournament, find the player(s) with the highest total score in each group.
-
-#### Sample Input
-
+Write an SQL query to find the winner in each group.Programming
+The query result format is in the following example:
 Players table:
-
-| player_id | group_id |
-|-----------|----------|
-| 15        | 1        |
-| 25        | 1        |
-| 30        | 1        |
-| 45        | 2        |
-| 50        | 2        |
-| 60        | 2        |
-
++-----------+------------+
+| player_id | group_id   |
++-----------+------------+
+| 15        | 1          |
+| 25        | 1          |
+| 30        | 1          |
+| 45        | 1          |
+| 10        | 2          |
+| 35        | 2          |
+| 50        | 2          |
+| 20        | 3          |
+| 40        | 3          |
++-----------+------------+
 Matches table:
-
-| match_id | first_player | second_player | first_score | second_score |
-|----------|-------------|--------------|-------------|--------------|
-| 1        | 15          | 45           | 3           | 5            |
-| 2        | 30          | 60           | 2           | 6            |
-| 3        | 15          | 60           | 7           | 0            |
-| 4        | 25          | 45           | 1           | 2            |
-| 5        | 30          | 25           | 5           | 5            |
-
-#### Sample Output
-
-| group_id | player_id |
-|----------|-----------|
-| 1        | 15        |
-| 2        | 45        |
-| 2        | 60        |
-
-**Explanation:**  
-- Group 1: 15 (3+7=10), 25 (1+5=6), 30 (2+5=7) → 15 wins  
-- Group 2: 45 (5+2=7), 50 (0), 60 (6+0=6) → 45 and 60 tie
-
-
++------------+--------------+---------------+-------------+--------------+
+| match_id   | first_player | second_player | first_score | second_score |
++------------+--------------+---------------+-------------+--------------+
+| 1          | 15           | 45            | 3           | 0            |
+| 2          | 30           | 25            | 1           | 2            |
+| 3          | 30           | 15            | 2           | 0            |
+| 4          | 40           | 20            | 5           | 2            |
+| 5          | 35           | 50            | 1           | 1            |
++------------+--------------+---------------+-------------+--------------+
+Result table:
++-----------+------------+
+| group_id  | player_id  |
++-----------+------------+
+| 1         | 15         |
+| 2         | 35         |
+| 3         | 40         |
++-----------+------------+
+```
 ```sql
 -- CTE TO GATHER ALL SCORES FOR EACH PLAYER (AS FIRST OR SECOND PLAYER)
 WITH PLAYERTOSCORE AS (
