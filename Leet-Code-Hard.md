@@ -415,44 +415,92 @@ Result table:
 +-----------+------------+
 ```
 ```sql
--- CTE TO GATHER ALL SCORES FOR EACH PLAYER (AS FIRST OR SECOND PLAYER)
-WITH PLAYERTOSCORE AS (
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS MATCHES;
+DROP TABLE IF EXISTS PLAYERS;
+GO
+
+CREATE TABLE PLAYERS (
+    PLAYER_ID INT PRIMARY KEY,
+    GROUP_ID INT
+);
+CREATE TABLE MATCHES (
+    MATCH_ID INT PRIMARY KEY,
+    FIRST_PLAYER INT,
+    SECOND_PLAYER INT,
+    FIRST_SCORE INT,
+    SECOND_SCORE INT
+);
+GO
+
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO PLAYERS (PLAYER_ID, GROUP_ID) VALUES
+(15, 1),
+(25, 1),
+(30, 1),
+(45, 1),
+(10, 2),
+(35, 2),
+(50, 2),
+(20, 3),
+(40, 3);
+INSERT INTO MATCHES (MATCH_ID, FIRST_PLAYER, SECOND_PLAYER, FIRST_SCORE, SECOND_SCORE) VALUES
+(1, 15, 45, 3, 0),
+(2, 30, 25, 1, 2),
+(3, 30, 15, 2, 0),
+(4, 40, 20, 5, 2),
+(5, 35, 50, 1, 1);
+GO
+
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM PLAYERS;
+SELECT * FROM MATCHES;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
+-- Step 1: Collect all player scores from matches
+WITH PLAYER_DATA AS (
     SELECT 
-        P.PLAYER_ID, 
-        P.GROUP_ID, 
-        M.FIRST_SCORE AS SCORE
-    FROM PLAYERS P
-    LEFT JOIN MATCHES M ON P.PLAYER_ID = M.FIRST_PLAYER
+        M.FIRST_PLAYER AS PLAYER_ID,
+        M.FIRST_SCORE  AS SCORE,
+        P.GROUP_ID
+    FROM MATCHES M
+    LEFT JOIN PLAYERS P ON P.PLAYER_ID = M.FIRST_PLAYER
 
     UNION ALL
 
     SELECT 
-        P.PLAYER_ID, 
-        P.GROUP_ID, 
-        M.SECOND_SCORE AS SCORE
-    FROM PLAYERS P
-    LEFT JOIN MATCHES M ON P.PLAYER_ID = M.SECOND_PLAYER
+        M.SECOND_PLAYER AS PLAYER_ID,
+        M.SECOND_SCORE  AS SCORE,
+        P.GROUP_ID
+    FROM MATCHES M
+    LEFT JOIN PLAYERS P ON P.PLAYER_ID = M.SECOND_PLAYER
 ),
 
--- CTE TO RANK PLAYERS BY TOTAL SCORE WITHIN EACH GROUP
-RANKEDPLAYERS AS (
+-- Step 2: Aggregate total score per player and rank within group
+TOTAL_SCORE_PER_PLAYER AS (
     SELECT 
-        PLAYER_ID, 
         GROUP_ID,
-        RANK() OVER (
+        PLAYER_ID,
+        SUM(SCORE) AS SCORE,
+        ROW_NUMBER() OVER (
             PARTITION BY GROUP_ID 
-            ORDER BY SUM(SCORE) DESC, PLAYER_ID
-        ) AS RANK
-    FROM PLAYERTOSCORE
-    GROUP BY PLAYER_ID, GROUP_ID
+            ORDER BY SUM(SCORE) DESC, PLAYER_ID ASC
+        ) AS RNK
+    FROM PLAYER_DATA 
+    GROUP BY GROUP_ID, PLAYER_ID
 )
 
--- SELECT TOP-RANKED PLAYER(S) FROM EACH GROUP
-SELECT 
-    GROUP_ID, 
-    PLAYER_ID
-FROM RANKEDPLAYERS
-WHERE RANK = 1;
+-- Step 3: Select group winners (rank = 1)
+SELECT GROUP_ID, PLAYER_ID
+FROM TOTAL_SCORE_PER_PLAYER
+WHERE RNK = 1;
 ```
 
 # [1225. Report Contiguous Dates](https://leetcode.com/problems/report-contiguous-dates/)
