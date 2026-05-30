@@ -287,10 +287,10 @@ Table: Items
 +---------------+---------+
 item_id is the primary key of this table.
 
-Write an SQL query to find for each user, whether the brand of the second item (by date) they sold is their favorite brand. If a user sold less than two items, report the answer for that user as no.Programming
+Write an SQL query to find for each user, whether the brand of the second item (by date) they sold is their favorite brand.
+If a user sold less than two items, report the answer for that user as no.
 
 It is guaranteed that no seller sold more than one item on a day.
-
 
 The query result format is in the following example:
 Users table:
