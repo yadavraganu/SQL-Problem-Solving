@@ -336,31 +336,81 @@ The answer for the users with id 2 and 3 is yes because the brands of their seco
 The answer for the user with id 4 is no because the brand of their second sold item is not their favorite brand.
 ```
 ```sql
--- Rank each seller's orders by order_date
-WITH RANKEDORDERS AS (
-    SELECT
-        ORDER_DATE,
-        ITEM_ID,
-        SELLER_ID,
-        RANK() OVER (
-            PARTITION BY SELLER_ID
-            ORDER BY ORDER_DATE
-        ) AS RK
-    FROM ORDERS
-)
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS USERS;
+DROP TABLE IF EXISTS ITEMS;
+DROP TABLE IF EXISTS ORDERS;
+GO
 
--- Join users with their second sold item and compare brands
-SELECT
-    U.USER_ID AS SELLER_ID,
-    CASE
-        WHEN U.FAVORITE_BRAND = I.ITEM_BRAND THEN 'yes'
-        ELSE 'no'
-    END AS SECOND_ITEM_FAV_BRAND
-FROM USERS AS U
-LEFT JOIN RANKEDORDERS AS O
-    ON U.USER_ID = O.SELLER_ID AND O.RK = 2
-LEFT JOIN ITEMS AS I
-    ON O.ITEM_ID = I.ITEM_ID;
+CREATE TABLE USERS (
+    USER_ID INT PRIMARY KEY,
+    JOIN_DATE DATE,
+    FAVORITE_BRAND VARCHAR(50)
+);
+CREATE TABLE ITEMS (
+    ITEM_ID INT PRIMARY KEY,
+    ITEM_BRAND VARCHAR(50)
+);
+CREATE TABLE ORDERS (
+    ORDER_ID INT PRIMARY KEY,
+    ORDER_DATE DATE,
+    ITEM_ID INT,
+    BUYER_ID INT,
+    SELLER_ID INT
+);
+GO
+
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO USERS (USER_ID, JOIN_DATE, FAVORITE_BRAND) VALUES
+(1, '2019-01-01', 'Lenovo'),
+(2, '2019-02-09', 'Samsung'),
+(3, '2019-01-19', 'LG'),
+(4, '2019-05-21', 'HP');
+INSERT INTO ITEMS (ITEM_ID, ITEM_BRAND) VALUES
+(1, 'Samsung'),
+(2, 'Lenovo'),
+(3, 'LG'),
+(4, 'HP');
+INSERT INTO ORDERS (ORDER_ID, ORDER_DATE, ITEM_ID, BUYER_ID, SELLER_ID) VALUES
+(1, '2019-08-01', 4, 1, 2),
+(2, '2019-08-02', 2, 1, 3),
+(3, '2019-08-03', 3, 2, 3),
+(4, '2019-08-04', 1, 4, 2),
+(5, '2019-08-04', 1, 3, 4),
+(6, '2019-08-05', 2, 2, 4);
+GO
+
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM USERS;
+SELECT * FROM ITEMS;
+SELECT * FROM ORDERS;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
+WITH ADD_RNK AS (
+SELECT 
+SELLER_ID,
+ITEM_BRAND,
+FAVORITE_BRAND,
+ROW_NUMBER() OVER (PARTITION BY SELLER_ID ORDER BY ORDER_DATE ASC) AS RNK
+FROM ORDERS O 
+LEFT JOIN ITEMS I ON O.ITEM_ID = I.ITEM_ID
+LEFT JOIN USERS U ON O.SELLER_ID = U.USER_ID
+),
+FAV_BRAND_SELL AS (
+SELECT SELLER_ID, 'Yes' AS SECOND_ITEM_FAV_BRAND FROM ADD_RNK WHERE RNK = 2 AND FAVORITE_BRAND = ITEM_BRAND
+)
+SELECT 
+U.USER_ID AS SELLER_ID,
+ISNULL(SECOND_ITEM_FAV_BRAND,'No') AS SECOND_ITEM_FAV_BRAND
+FROM USERS U 
+LEFT JOIN FAV_BRAND_SELL FV ON FV.SELLER_ID = U.USER_ID
 ```
 
 # [1194. Tournament Winners](https://leetcode.com/problems/tournament-winners/)
