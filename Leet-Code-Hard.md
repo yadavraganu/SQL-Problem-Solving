@@ -4087,28 +4087,63 @@ Explanation:
 Output table is ordered by week_of_month in ascending order.
 ```
 ```sql
-WITH FRIDAYS AS (
-    -- SEED WITH THE FIRST FRIDAY OF NOVEMBER 2023
-    SELECT CAST('2023-11-03' AS DATE) AS FRIDAY
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS PURCHASES;
+GO
+CREATE TABLE PURCHASES (
+    USER_ID INT,
+    PURCHASE_DATE DATE,
+    AMOUNT_SPEND INT
+);
+GO
+
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO PURCHASES (USER_ID, PURCHASE_DATE, AMOUNT_SPEND) VALUES
+(11, '2023-11-07', 1126),
+(15, '2023-11-30', 7473),
+(17, '2023-11-14', 2414),
+(12, '2023-11-24', 9692),
+(8,  '2023-11-03', 5117),
+(1,  '2023-11-16', 5241),
+(10, '2023-11-12', 8266),
+(13, '2023-11-24', 12000);
+GO
+
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM PURCHASES;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
+-- Generate all days of the month with weekday names
+WITH MONTH_DAYS AS (
+    SELECT 
+        CAST('2023-11-01' AS DATE) AS MONTH_DAY, 
+        DATENAME(WEEKDAY, CAST('2023-11-01' AS DATE)) AS WEEK_DAY
     UNION ALL
-    -- ADD 7 DAYS UNTIL THE END OF NOVEMBER
-    SELECT DATEADD(DAY, 7, FRIDAY)
-    FROM FRIDAYS
-    WHERE DATEADD(DAY, 7, FRIDAY) <= '2023-11-30'
+    SELECT 
+        DATEADD(DAY, 1, MONTH_DAY), 
+        DATENAME(WEEKDAY, DATEADD(DAY, 1, MONTH_DAY))
+    FROM MONTH_DAYS
+    WHERE MONTH_DAY < EOMONTH(MONTH_DAY)  -- stop at last day of month
 )
 SELECT
-    -- CALCULATE WEEK_OF_MONTH AS 1 FOR THE FIRST FRIDAY, 2 FOR THE NEXT, ETC.
-    DATEDIFF(DAY, '2023-11-03', F.FRIDAY) / 7 + 1 AS WEEK_OF_MONTH,
-    F.FRIDAY           AS PURCHASE_DATE,
-    ISNULL(SUM(P.AMOUNT_SPEND), 0) AS TOTAL_AMOUNT
-FROM FRIDAYS AS F
-LEFT JOIN PURCHASES AS P
-    ON P.PURCHASE_DATE = F.FRIDAY
-GROUP BY
-    F.FRIDAY
-ORDER BY
-    WEEK_OF_MONTH
-OPTION (MAXRECURSION 0);
+    -- Calculate week-of-month (week difference from first day of month + 1)
+    CAST(DATENAME(WEEK, MONTH_DAY) AS INT) 
+        + 1 - CAST(DATENAME(WEEK, DATETRUNC(MONTH, MONTH_DAY)) AS INT) AS WEEK_OF_MONTH,
+    MONTH_DAY,                             -- actual Friday date
+    ISNULL(SUM(P.AMOUNT_SPEND), 0) AS TOTAL_AMOUNT  -- total spend for that Friday
+FROM MONTH_DAYS MD
+LEFT JOIN PURCHASES P 
+    ON P.PURCHASE_DATE = MD.MONTH_DAY       -- join purchases by date
+WHERE MD.WEEK_DAY = 'Friday'                -- filter only Fridays
+GROUP BY MONTH_DAY
+ORDER BY MONTH_DAY;
 ```
 
 # [2995. Viewers Turned Streamers](https://leetcode.com/problems/viewers-turned-streamers/)
