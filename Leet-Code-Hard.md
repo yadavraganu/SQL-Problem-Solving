@@ -4039,27 +4039,28 @@ ORDER BY COUNTRY;
 ```
 
 # [2994. Friday Purchases II](https://leetcode.com/problems/friday-purchases-ii/)
+```
+Table: Purchases
++---------------+------+
+| Column Name   | Type |
++---------------+------+
+| user_id       | int  |
+| purchase_date | date |
+| amount_spend  | int  |
++---------------+------+
+(user_id, purchase_date, amount_spend) is the primary key (combination of columns with unique values) for this table.
+purchase_date will range from November 1, 2023, to November 30, 2023, inclusive of both dates.
+Each row contains user id, purchase date, and amount spend.
+Write a solution to calculate the total spending by users on each Friday of every week in November 2023. If there are no purchases on a particular Friday of a week, it will be considered as 0.
+Return the result table ordered by week of month in ascending order.
+The result format is in the following example.
+Example 1:
 
-### Description
-
-The `Purchases` table has the following schema:  
-- user_id       int  
-- purchase_date date  
-- amount_spend int  
-
-The primary key is the combination `(user_id, purchase_date, amount_spend)`.  
-The `purchase_date` ranges from November 1, 2023, to November 30, 2023.  
-
-Write a query to compute, for each Friday in November 2023, the total amount spent by all users on that day.  
-If no purchases occurred on a given Friday, report 0.  
-Return the result ordered by `week_of_month` in ascending order, where `week_of_month` is 1 for the first Friday, 2 for the second, and so on.
-
-### Sample Input
-
+Input: 
 Purchases table:
-
++---------+---------------+--------------+
 | user_id | purchase_date | amount_spend |
-|---------|---------------|--------------|
++---------+---------------+--------------+
 | 11      | 2023-11-07    | 1126         |
 | 15      | 2023-11-30    | 7473         |
 | 17      | 2023-11-14    | 2414         |
@@ -4068,23 +4069,23 @@ Purchases table:
 | 1       | 2023-11-16    | 5241         |
 | 10      | 2023-11-12    | 8266         |
 | 13      | 2023-11-24    | 12000        |
-
-### Sample Output
-
++---------+---------------+--------------+
+Output: 
++---------------+---------------+--------------+
 | week_of_month | purchase_date | total_amount |
-|---------------|---------------|--------------|
++---------------+---------------+--------------+
 | 1             | 2023-11-03    | 5117         |
 | 2             | 2023-11-10    | 0            |
 | 3             | 2023-11-17    | 0            |
 | 4             | 2023-11-24    | 21692        |
-
-### Explanation
-
-- Week 1’s Friday is 2023-11-03, total spending = 5,117.  
-- Week 2’s Friday is 2023-11-10, no purchases → 0.  
-- Week 3’s Friday is 2023-11-17, no purchases → 0.  
-- Week 4’s Friday is 2023-11-24, two purchases (9,692 + 12,000) → 21,692.
-
++---------------+---------------+--------------+ 
+Explanation: 
+- During the first week of November 2023, transactions amounting to $5,117 occurred on Friday, 2023-11-03.
+- For the second week of November 2023, there were no transactions on Friday, 2023-11-10, resulting in a value of 0 in the output table for that day.
+- Similarly, during the third week of November 2023, there were no transactions on Friday, 2023-11-17, reflected as 0 in the output table for that specific day.
+- In the fourth week of November 2023, two transactions took place on Friday, 2023-11-24, amounting to $12,000 and $9,692 respectively, summing up to a total of $21,692.
+Output table is ordered by week_of_month in ascending order.
+```
 ```sql
 WITH FRIDAYS AS (
     -- SEED WITH THE FIRST FRIDAY OF NOVEMBER 2023
