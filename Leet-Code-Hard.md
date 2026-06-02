@@ -580,15 +580,16 @@ Table: Succeeded
 +--------------+---------+
 | success_date | date    |
 +--------------+---------+
-Primary key for this table is success_date.
-Succeeded table contains the days of succeeded tasks.
-A system is running one task every day. Every task is independent of the previous tasks. The tasks can fail or succeed.
+Primary key for this table is success_date.  
+Succeeded table contains the days of succeeded tasks.  
+A system is running one task every day. Every task is independent of the previous tasks. The tasks can fail or succeed.  
 
-Write an SQL query to generate a report of period_state for each continuous interval of days in the period from 2019-01-01 to 2019-12-31.
-period_state is 'failed' if tasks in this interval failed or 'succeeded' if tasks in this interval succeeded. Interval of days are retrieved as start_date and end_date.
+Write an SQL query to generate a report of period_state for each continuous interval of days in the period from 2019-01-01 to 2019-12-31.  
+period_state is 'failed' if tasks in this interval failed or 'succeeded' if tasks in this interval succeeded.  
+Interval of days are retrieved as start_date and end_date.
 
 Order result by start_date.
-The query result format is in the following example:Programming
+The query result format is in the following example:
 Failed table:
 +-------------------+
 | fail_date         |
