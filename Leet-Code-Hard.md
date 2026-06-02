@@ -624,39 +624,95 @@ From 2019-01-04 to 2019-01-05 all tasks failed and system state was "failed".
 From 2019-01-06 to 2019-01-06 all tasks succeeded and system state was "succeeded".
 ```
 ```sql
--- COMBINE FAILED AND SUCCEEDED DATES WITH STATUS
-WITH COMBINED AS (
-    SELECT FAIL_DATE AS DT, 'failed' AS ST FROM FAILED WHERE YEAR(FAIL_DATE) = 2019
-    UNION ALL
-    SELECT SUCCESS_DATE AS DT, 'succeeded' AS ST FROM SUCCEEDED WHERE YEAR(SUCCESS_DATE) = 2019
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS FAILED;
+DROP TABLE IF EXISTS SUCCEEDED;
+GO
+CREATE TABLE FAILED (
+    FAIL_DATE DATE NOT NULL
+);
+CREATE TABLE SUCCEEDED (
+    SUCCESS_DATE DATE NOT NULL
+);
+GO
+
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO FAILED (FAIL_DATE) VALUES
+('2018-12-28'),
+('2018-12-29'),
+('2019-01-04'),
+('2019-01-05');
+INSERT INTO SUCCEEDED (SUCCESS_DATE) VALUES
+('2018-12-30'),
+('2018-12-31'),
+('2019-01-01'),
+('2019-01-02'),
+('2019-01-03'),
+('2019-01-06');
+GO
+
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM FAILED;
+SELECT * FROM SUCCEEDED;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
+-- STEP 1: GROUP CONSECUTIVE FAILED DATES IN 2019
+WITH FAILED_GROUP AS (
+    SELECT 
+        FAIL_DATE,
+        -- CREATE A GROUPING KEY BY SUBTRACTING ROW NUMBER FROM THE DATE
+        DATEADD(DAY, (ROW_NUMBER() OVER (ORDER BY FAIL_DATE ASC)) * -1, FAIL_DATE) AS GRP
+    FROM FAILED
+    WHERE YEAR(FAIL_DATE) = 2019
 ),
 
--- ASSIGN RANK TO EACH DATE PER STATUS
-RANKED AS (
+-- STEP 2: GROUP CONSECUTIVE SUCCEEDED DATES IN 2019
+SUCCEEDED_GROUP AS (
     SELECT 
-        DT, 
-        ST,
-        RANK() OVER (PARTITION BY ST ORDER BY DT) AS RK
-    FROM COMBINED
+        SUCCESS_DATE,
+        -- SAME GROUPING TRICK FOR SUCCESS DATES
+        DATEADD(DAY, (ROW_NUMBER() OVER (ORDER BY SUCCESS_DATE ASC)) * -1, SUCCESS_DATE) AS GRP
+    FROM SUCCEEDED
+    WHERE YEAR(SUCCESS_DATE) = 2019
 ),
 
--- CREATE GROUP IDENTIFIER BY SUBTRACTING RANK FROM DATE
-GROUPED AS (
+-- STEP 3: COLLAPSE EACH GROUP INTO A START AND END DATE RANGE
+COMBINED_DATA AS (
+    -- SUCCESS RANGES
     SELECT 
-        DT, 
-        ST, 
-        DATEADD(DAY, -RK, DT) AS GRP
-    FROM RANKED
+        'SUCCEEDED' AS PERIOD_STATE,
+        GRP,
+        MIN(SUCCESS_DATE) AS START_DATE,
+        MAX(SUCCESS_DATE) AS END_DATE
+    FROM SUCCEEDED_GROUP
+    GROUP BY GRP
+
+    UNION
+
+    -- FAILURE RANGES
+    SELECT 
+        'FAILED' AS PERIOD_STATE,
+        GRP,
+        MIN(FAIL_DATE) AS START_DATE,
+        MAX(FAIL_DATE) AS END_DATE
+    FROM FAILED_GROUP
+    GROUP BY GRP
 )
 
--- GROUP BY STATUS AND GROUP IDENTIFIER TO GET CONTIGUOUS RANGES
+-- STEP 4: FINAL ORDERED OUTPUT
 SELECT 
-    ST AS PERIOD_STATE,
-    MIN(DT) AS START_DATE,
-    MAX(DT) AS END_DATE
-FROM GROUPED
-GROUP BY ST, GRP
-ORDER BY START_DATE;
+    PERIOD_STATE, 
+    START_DATE, 
+    END_DATE
+FROM COMBINED_DATA
+ORDER BY START_DATE ASC;
 ```
 
 # [1336. Number of Transactions per Visit](https://leetcode.com/problems/number-of-transactions-per-visit/)
