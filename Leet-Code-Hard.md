@@ -5862,25 +5862,67 @@ The average salary of department '2' is (6000 + 10000)/2 = 8000, which is the av
 With the same formula for the average salary comparison in February, the result is 'same' since both the department '1' and '2' have the same average salary with the company, which is 7000.
 ```
 ```sql
-WITH T AS (
-    SELECT
-        FORMAT(PAY_DATE, 'yyyy-MM') AS PAY_MONTH,
-        DEPARTMENT_ID,
-        AVG(AMOUNT) OVER (PARTITION BY PAY_DATE) AS COMPANY_AVG_AMOUNT,
-        AVG(AMOUNT) OVER (PARTITION BY PAY_DATE, DEPARTMENT_ID) AS DEPARTMENT_AVG_AMOUNT
-    FROM
-        SALARY AS S
-        JOIN EMPLOYEE AS E ON S.EMPLOYEE_ID = E.EMPLOYEE_ID
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS EMPLOYEE;
+DROP TABLE IF EXISTS SALARY;
+GO
+CREATE TABLE EMPLOYEE (
+    EMPLOYEE_ID INT PRIMARY KEY,
+    DEPARTMENT_ID INT
+);
+CREATE TABLE SALARY (
+    ID INT PRIMARY KEY,
+    EMPLOYEE_ID INT,
+    AMOUNT INT,
+    PAY_DATE DATE
+);
+GO
+
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO EMPLOYEE (EMPLOYEE_ID, DEPARTMENT_ID) VALUES
+(1, 1),
+(2, 2),
+(3, 2);
+INSERT INTO SALARY (ID, EMPLOYEE_ID, AMOUNT, PAY_DATE) VALUES
+(1, 1, 9000, '2017-03-31'),
+(2, 2, 6000, '2017-03-31'),
+(3, 3, 10000, '2017-03-31'),
+(4, 1, 7000, '2017-02-28'),
+(5, 2, 6000, '2017-02-28'),
+(6, 3, 8000, '2017-02-28');
+GO
+
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM EMPLOYEE;
+SELECT * FROM SALARY;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
+WITH AVG_SALRY AS (
+SELECT
+S.EMPLOYEE_ID,
+S.AMOUNT,
+DEPARTMENT_ID,
+FORMAT(PAY_DATE, 'yyyy-MM') AS PAY_MONTH,
+AVG(AMOUNT) OVER(PARTITION BY PAY_DATE,DEPARTMENT_ID) AS AVG_DEP_SAL,
+AVG(AMOUNT) OVER(PARTITION BY PAY_DATE) AS AVG_ORG_SAL
+FROM SALARY S LEFT JOIN EMPLOYEE E ON S.EMPLOYEE_ID = E.EMPLOYEE_ID
 )
 SELECT DISTINCT
-    PAY_MONTH,
-    DEPARTMENT_ID,
-    CASE
-        WHEN COMPANY_AVG_AMOUNT = DEPARTMENT_AVG_AMOUNT THEN 'same'
-        WHEN COMPANY_AVG_AMOUNT < DEPARTMENT_AVG_AMOUNT THEN 'higher'
-        ELSE 'lower'
-    END AS COMPARISON
-FROM T;
+PAY_MONTH,
+DEPARTMENT_ID,
+CASE 
+    WHEN AVG_DEP_SAL = AVG_ORG_SAL THEN  'Same'
+    WHEN AVG_DEP_SAL < AVG_ORG_SAL THEN 'Lower'
+    ELSE 'Higher' 
+END AS COMPARISON
+FROM AVG_SALRY ORDER BY 1 DESC, 2
 ```
 
 # [618. Students Report By Geography](https://leetcode.com/problems/students-report-by-geography/)
