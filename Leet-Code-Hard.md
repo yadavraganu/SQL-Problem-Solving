@@ -5811,23 +5811,77 @@ ORDER BY ID, MONTH DESC;
 ```
 
 # [601. Human Traffic of Stadium](https://leetcode.com/problems/human-traffic-of-stadium/)
-```sql
-WITH S AS (
-    SELECT *,
-           ID - ROW_NUMBER() OVER (ORDER BY ID) AS RK
-    FROM STADIUM
-    WHERE PEOPLE >= 100
-),
-T AS (
-    SELECT *,
-           COUNT(1) OVER (PARTITION BY RK) AS CNT
-    FROM S
-)
-SELECT ID, VISIT_DATE, PEOPLE
-FROM T
-WHERE CNT >= 3
 ```
+X city built a new stadium, each day many people visit it and the stats are saved as these columns: id, visit_date, people
+Please write a query to display the records which have 3 or more consecutive rows and the amount of people more than 100(inclusive).
+For example, the table stadium:
++------+------------+-----------+
+| id   | visit_date | people    |
++------+------------+-----------+
+| 1    | 2017-01-01 | 10        |
+| 2    | 2017-01-02 | 109       |
+| 3    | 2017-01-03 | 150       |
+| 4    | 2017-01-04 | 99        |
+| 5    | 2017-01-05 | 145       |
+| 6    | 2017-01-06 | 1455      |
+| 7    | 2017-01-07 | 199       |
+| 8    | 2017-01-08 | 188       |
++------+------------+-----------+
+For the sample data above, the output is:
++------+------------+-----------+
+| id   | visit_date | people    |
++------+------------+-----------+
+| 5    | 2017-01-05 | 145       |
+| 6    | 2017-01-06 | 1455      |
+| 7    | 2017-01-07 | 199       |
+| 8    | 2017-01-08 | 188       |
++------+------------+-----------+
+```
+```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS VISITS;
+GO
+CREATE TABLE VISITS (
+    ID INT PRIMARY KEY,
+    VISIT_DATE DATE,
+    PEOPLE INT
+);;
+GO
 
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO VISITS (ID, VISIT_DATE, PEOPLE) VALUES
+(1, '2017-01-01', 10),
+(2, '2017-01-02', 109),
+(3, '2017-01-03', 150),
+(4, '2017-01-04', 99),
+(5, '2017-01-05', 145),
+(6, '2017-01-06', 1455),
+(7, '2017-01-07', 199),
+(8, '2017-01-08', 188);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM VISITS;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
+WITH GROUPS AS (
+SELECT * ,
+ID - ROW_NUMBER() OVER(ORDER BY VISIT_DATE ASC) AS GRP
+FROM VISITS WHERE PEOPLE >= 100
+),RANK_GROUPS AS 
+(
+SELECT *,
+COUNT(1) OVER (PARTITION BY GRP) AS CNT
+FROM GROUPS
+)
+SELECT ID, VISIT_DATE, PEOPLE FROM RANK_GROUPS WHERE CNT >=3
+```
 # [615. Average Salary: Departments VS Company](https://leetcode.com/problems/average-salary-departments-vs-company/)
 ```
 Given two tables as below, write a query to display the comparison result (higher/lower/same) of the average salary of employees in a department to the company's average salary.
