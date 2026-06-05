@@ -5788,26 +5788,99 @@ WHERE RK1 >= S / 2 AND RK2 >= S / 2;
 ```
 
 # [579. Find Cumulative Salary of an Employee](https://leetcode.com/problems/find-cumulative-salary-of-an-employee/)
+```
+The Employee table holds the salary information in a year.
+Write a SQL to get the cumulative sum of an employee's salary over a period of 3 months but exclude the most recent month.
+The result should be displayed by 'Id' ascending, and then by 'Month' descending.
+
+Example
+Input
+| Id | Month | Salary |
+|----|-------|--------|
+| 1  | 1     | 20     |
+| 2  | 1     | 20     |
+| 1  | 2     | 30     |
+| 2  | 2     | 30     |
+| 3  | 2     | 40     |
+| 1  | 3     | 40     |
+| 3  | 3     | 60     |
+| 1  | 4     | 60     |
+| 3  | 4     | 70     |
+Output
+| Id | Month | Salary |
+|----|-------|--------|
+| 1  | 3     | 90     |
+| 1  | 2     | 50     |
+| 1  | 1     | 20     |
+| 2  | 1     | 20     |
+| 3  | 3     | 100    |
+| 3  | 2     | 40     |
+
+Explanation
+Employee '1' has 3 salary records for the following 3 months except the most recent month '4': salary 40 for month '3', 30 for month '2' and 20 for month '1'
+So the cumulative sum of salary of this employee over 3 months is 90(40+30+20), 50(30+20) and 20 respectively.Programming
+
+| Id | Month | Salary |
+|----|-------|--------|
+| 1  | 3     | 90     |
+| 1  | 2     | 50     |
+| 1  | 1     | 20     |
+
+Employee '2' only has one salary record (month '1') except its most recent month '2'.
+| Id | Month | Salary |
+|----|-------|--------|
+| 2  | 1     | 20     |
+
+Employ '3' has two salary records except its most recent pay month '4': month '3' with 60 and month '2' with 40. So the cumulative salary is as following.
+| Id | Month | Salary |
+|----|-------|--------|
+| 3  | 3     | 100    |
+| 3  | 2     | 40     |
+```
 ```sql
-WITH T AS (
-    SELECT 
-        ID, 
-        MONTH, 
-        SUM(SALARY) OVER (
-            PARTITION BY ID 
-            ORDER BY MONTH 
-            ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
-        ) AS SALARY,
-        RANK() OVER (
-            PARTITION BY ID 
-            ORDER BY MONTH DESC
-        ) AS RK
-    FROM EMPLOYEE
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS SALARY_BY_MONTH;
+GO
+CREATE TABLE SALARY_BY_MONTH (
+    ID INT,
+    MONTH INT,
+    SALARY INT
+);
+GO
+
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO SALARY_BY_MONTH (ID, MONTH, SALARY) VALUES
+(1, 1, 20),
+(2, 1, 20),
+(1, 2, 30),
+(2, 2, 30),
+(3, 2, 40),
+(1, 3, 40),
+(3, 3, 60),
+(1, 4, 60),
+(3, 4, 70);
+GO
+
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM SALARY_BY_MONTH ORDER BY ID ,MONTH;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
+WITH CUMULATIVE_SAL AS (
+SELECT *,
+SUM(SALARY) OVER (PARTITION BY ID ORDER BY [MONTH] ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) AS CUMULATIVE_SAL,
+(CASE WHEN LEAD(SALARY) OVER (PARTITION BY ID ORDER BY MONTH) IS NULL THEN 1 ELSE 0 END) AS LAST_MONTH_IND
+FROM SALARY_BY_MONTH
 )
-SELECT ID, MONTH, SALARY
-FROM T
-WHERE RK > 1
-ORDER BY ID, MONTH DESC;
+SELECT ID ,MONTH, CUMULATIVE_SAL AS SALARY FROM CUMULATIVE_SAL
+WHERE LAST_MONTH_IND = 0
+ORDER BY ID , MONTH DESC
 ```
 
 # [601. Human Traffic of Stadium](https://leetcode.com/problems/human-traffic-of-stadium/)
