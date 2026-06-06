@@ -5771,22 +5771,64 @@ WHERE RK >= N / 2 AND RK <= N / 2 + 1;
 ```
 
 # [571. Find Median Given Frequency of Numbers](https://leetcode.com/problems/find-median-given-frequency-of-numbers/)
+```
+The Numbers table keeps the value of number and its frequency.
++----------+-------------+
+|  Number  |  Frequency  |
++----------+-------------|
+|  0       |  7          |
+|  1       |  1          |
+|  2       |  3          |
+|  3       |  1          |
++----------+-------------+
+In this table, the numbers are 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 3, so the median is (0 + 0) / 2 = 0.
++--------+
+| median |
++--------|
+| 0.0000 |
++--------+
+Write a query to find the median of all numbers and name the result as median.
+```
 ```sql
-WITH
-    T AS (
-        SELECT
-            *,
-            SUM(FREQUENCY) OVER (ORDER BY NUM ASC) AS RK1,
-            SUM(FREQUENCY) OVER (ORDER BY NUM DESC) AS RK2,
-            SUM(FREQUENCY) OVER () AS S
-        FROM NUMBERS
-    )
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS NUMBER_FREQUENCY;
+GO
+CREATE TABLE NUMBER_FREQUENCY (
+    NUMBER INT PRIMARY KEY,
+    FREQUENCY INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO NUMBER_FREQUENCY (NUMBER, FREQUENCY) VALUES
+(0, 7),
+(1, 1),
+(2, 3),
+(3, 1);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM NUMBER_FREQUENCY;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
+WITH T AS (
+    SELECT
+        *,
+        SUM(FREQUENCY) OVER (ORDER BY NUMBER ASC)  AS RK1,  -- cumulative from start
+        SUM(FREQUENCY) OVER (ORDER BY NUMBER DESC) AS RK2,  -- cumulative from end
+        SUM(FREQUENCY) OVER ()                  AS S     -- total count
+    FROM NUMBER_FREQUENCY
+)
 SELECT
-    ROUND(AVG(NUM), 1) AS MEDIAN
+    ROUND(AVG(NUMBER), 1) AS MEDIAN
 FROM T
 WHERE RK1 >= S / 2 AND RK2 >= S / 2;
 ```
-
 # [579. Find Cumulative Salary of an Employee](https://leetcode.com/problems/find-cumulative-salary-of-an-employee/)
 ```
 The Employee table holds the salary information in a year.
