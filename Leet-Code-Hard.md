@@ -5758,16 +5758,96 @@ HAVING
   ORDER BY 4 DESC, 1 ASC
 ```
 # [569. Median Employee Salary](https://leetcode.com/problems/median-employee-salary/)
+```
+The Employee table holds all employees. The employee table has three columns: Employee Id, Company Name, and Salary.
++-----+------------+--------+
+|Id   | Company    | Salary |
++-----+------------+--------+
+|1    | A          | 2341   |
+|2    | A          | 341    |
+|3    | A          | 15     |
+|4    | A          | 15314  |
+|5    | A          | 451    |
+|6    | A          | 513    |
+|7    | B          | 15     |
+|8    | B          | 13     |
+|9    | B          | 1154   |
+|10   | B          | 1345   |
+|11   | B          | 1221   |
+|12   | B          | 234    |
+|13   | C          | 2345   |
+|14   | C          | 2645   |
+|15   | C          | 2645   |
+|16   | C          | 2652   |
+|17   | C          | 65     |
++-----+------------+--------+
+Write a SQL query to find the median salary of each company. Bonus points if you can solve it without using any built-in SQL functions.Programming
++-----+------------+--------+
+|Id   | Company    | Salary |
++-----+------------+--------+
+|5    | A          | 451    |
+|6    | A          | 513    |
+|12   | B          | 234    |
+|9    | B          | 1154   |
+|14   | C          | 2645   |
++-----+------------+--------+
+```
 ```sql
-WITH T AS (
-    SELECT *,
-           ROW_NUMBER() OVER (PARTITION BY COMPANY ORDER BY SALARY ASC) AS RK,
-           COUNT(ID) OVER (PARTITION BY COMPANY) AS N
-    FROM EMPLOYEE
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS EMPLOYEE;
+GO
+CREATE TABLE EMPLOYEE (
+    ID INT PRIMARY KEY,
+    COMPANY VARCHAR(10),
+    SALARY INT
+);
+
+GO
+
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO EMPLOYEE (ID, COMPANY, SALARY) VALUES
+(1, 'A', 2341),
+(2, 'A', 341),
+(3, 'A', 15),
+(4, 'A', 15314),
+(5, 'A', 451),
+(6, 'A', 513),
+(7, 'B', 15),
+(8, 'B', 13),
+(9, 'B', 1154),
+(10, 'B', 1345),
+(11, 'B', 1221),
+(12, 'B', 234),
+(13, 'C', 2345),
+(14, 'C', 2645),
+(15, 'C', 2645),
+(16, 'C', 2652),
+(17, 'C', 65);
+GO
+
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM EMPLOYEE;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
+WITH RANKED_DATE AS (
+SELECT *,
+ROW_NUMBER() OVER(PARTITION BY COMPANY ORDER BY SALARY ASC) AS RK,
+COUNT(ID) OVER(PARTITION BY COMPANY) AS CNT
+FROM EMPLOYEE 
 )
-SELECT ID, COMPANY, SALARY
-FROM T
-WHERE RK >= N / 2 AND RK <= N / 2 + 1;
+SELECT ID,COMPANY,SALARY FROM RANKED_DATE 
+WHERE 
+(CNT % 2 = 1 AND RK = (CNT + 1)/2)
+OR
+(CNT % 2 = 0 AND RK IN (CNT/2, (CNT/2) + 1))
+ORDER BY 2,3
 ```
 
 # [571. Find Median Given Frequency of Numbers](https://leetcode.com/problems/find-median-given-frequency-of-numbers/)
