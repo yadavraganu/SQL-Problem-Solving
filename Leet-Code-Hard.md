@@ -5715,47 +5715,109 @@ S004  is not a zombie session
 The result table is ordered by scroll_count in descending order, then by session_id in ascending order.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS APP_EVENTS;
+GO
+CREATE TABLE APP_EVENTS (
+    EVENT_ID INT PRIMARY KEY,
+    USER_ID INT NOT NULL,
+    EVENT_TIMESTAMP DATETIME NOT NULL,
+    EVENT_TYPE VARCHAR(50) NOT NULL,
+    SESSION_ID VARCHAR(20) NOT NULL,
+    EVENT_VALUE INT
+);
+GO
+
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO APP_EVENTS (EVENT_ID, USER_ID, EVENT_TIMESTAMP, EVENT_TYPE, SESSION_ID, EVENT_VALUE) VALUES
+(1, 201, '2024-03-01 10:00:00', 'app_open', 'S001', NULL),
+(2, 201, '2024-03-01 10:05:00', 'scroll', 'S001', 500),
+(3, 201, '2024-03-01 10:10:00', 'scroll', 'S001', 750),
+(4, 201, '2024-03-01 10:15:00', 'scroll', 'S001', 600),
+(5, 201, '2024-03-01 10:20:00', 'scroll', 'S001', 800),
+(6, 201, '2024-03-01 10:25:00', 'scroll', 'S001', 550),
+(7, 201, '2024-03-01 10:30:00', 'scroll', 'S001', 900),
+(8, 201, '2024-03-01 10:35:00', 'app_close', 'S001', NULL),
+(9, 202, '2024-03-01 11:00:00', 'app_open', 'S002', NULL),
+(10, 202, '2024-03-01 11:02:00', 'click', 'S002', NULL),
+(11, 202, '2024-03-01 11:05:00', 'scroll', 'S002', 400),
+(12, 202, '2024-03-01 11:08:00', 'click', 'S002', NULL),
+(13, 202, '2024-03-01 11:10:00', 'scroll', 'S002', 350),
+(14, 202, '2024-03-01 11:15:00', 'purchase', 'S002', 50),
+(15, 202, '2024-03-01 11:20:00', 'app_close', 'S002', NULL),
+(16, 203, '2024-03-01 12:00:00', 'app_open', 'S003', NULL),
+(17, 203, '2024-03-01 12:10:00', 'scroll', 'S003', 1000),
+(18, 203, '2024-03-01 12:20:00', 'scroll', 'S003', 1200),
+(19, 203, '2024-03-01 12:25:00', 'click', 'S003', NULL),
+(20, 203, '2024-03-01 12:30:00', 'scroll', 'S003', 800),
+(21, 203, '2024-03-01 12:40:00', 'scroll', 'S003', 900),
+(22, 203, '2024-03-01 12:50:00', 'scroll', 'S003', 1100),
+(23, 203, '2024-03-01 13:00:00', 'app_close', 'S003', NULL),
+(24, 204, '2024-03-01 14:00:00', 'app_open', 'S004', NULL),
+(25, 204, '2024-03-01 14:05:00', 'scroll', 'S004', 600),
+(26, 204, '2024-03-01 14:08:00', 'scroll', 'S004', 700),
+(27, 204, '2024-03-01 14:10:00', 'click', 'S004', NULL),
+(28, 204, '2024-03-01 14:12:00', 'app_close', 'S004', NULL);
+GO
+
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM APP_EVENTS;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
+WITH SESSION_BOUNDS AS (
+    SELECT 
+        SESSION_ID,
+        USER_ID,
+        MIN(CASE WHEN EVENT_TYPE = 'app_open' THEN EVENT_TIMESTAMP END) AS SESSION_START,
+        MAX(CASE WHEN EVENT_TYPE = 'app_close' THEN EVENT_TIMESTAMP END) AS SESSION_END
+    FROM APP_EVENTS
+    GROUP BY SESSION_ID, USER_ID
+),
+SESSION_DURATION AS (
+    SELECT 
+        SESSION_ID,
+        USER_ID,
+        DATEDIFF(MINUTE, SESSION_START, SESSION_END) AS SESSION_DURATION_MINUTES
+    FROM SESSION_BOUNDS
+),
+EVENT_COUNTS AS (
+    SELECT 
+        SESSION_ID,
+        COUNT(CASE WHEN EVENT_TYPE = 'scroll' THEN 1 END) AS SCROLL_COUNT,
+        COUNT(CASE WHEN EVENT_TYPE = 'click' THEN 1 END) AS CLICK_COUNT,
+        COUNT(CASE WHEN EVENT_TYPE = 'purchase' THEN 1 END) AS PURCHASE_COUNT
+    FROM APP_EVENTS
+    GROUP BY SESSION_ID
+),
+FINAL AS (
+    SELECT 
+        D.SESSION_ID,
+        D.USER_ID,
+        D.SESSION_DURATION_MINUTES,
+        E.SCROLL_COUNT,
+        E.CLICK_COUNT,
+        E.PURCHASE_COUNT
+    FROM SESSION_DURATION D
+    INNER JOIN EVENT_COUNTS E ON D.SESSION_ID = E.SESSION_ID
+)
 SELECT 
-  SESSION_ID, 
-  MAX(USER_ID) AS USER_ID, 
-  DATEDIFF(
-    MINUTE, 
-    MIN(
-      CASE WHEN EVENT_TYPE = 'app_open' THEN EVENT_TIMESTAMP END
-    ), 
-    MAX(
-      CASE WHEN EVENT_TYPE = 'app_close' THEN EVENT_TIMESTAMP END
-    )
-  ) AS SESSION_DURATION_MINUTES, 
-  COUNT(
-    CASE WHEN EVENT_TYPE = 'scroll' THEN 1 END
-  ) AS SCROLL_COUNT 
-FROM 
-  APP_EVENTS 
-GROUP BY 
-  SESSION_ID 
-HAVING 
-  DATEDIFF(
-    MINUTE, 
-    MIN(
-      CASE WHEN EVENT_TYPE = 'app_open' THEN EVENT_TIMESTAMP END
-    ), 
-    MAX(
-      CASE WHEN EVENT_TYPE = 'app_close' THEN EVENT_TIMESTAMP END
-    )
-  ) > 30 
-  AND COUNT(
-    CASE WHEN EVENT_TYPE = 'scroll' THEN 1 END
-  ) >= 5 
-  AND COUNT(
-    CASE WHEN EVENT_TYPE = 'click' THEN 1 END
-  ) * 1.0 / COUNT(
-    CASE WHEN EVENT_TYPE = 'scroll' THEN 1 END
-  ) < 0.2 
-  AND COUNT(
-    CASE WHEN EVENT_TYPE = 'purchase' THEN 1 END
-  ) = 0
-  ORDER BY 4 DESC, 1 ASC
+    SESSION_ID,
+    USER_ID,
+    SESSION_DURATION_MINUTES,
+    SCROLL_COUNT
+FROM FINAL
+WHERE SESSION_DURATION_MINUTES > 30
+  AND SCROLL_COUNT >= 5
+  AND (CLICK_COUNT * 1.0 / SCROLL_COUNT) < 0.2
+  AND PURCHASE_COUNT = 0
+ORDER BY SCROLL_COUNT DESC, SESSION_ID ASC;
 ```
 # [569. Median Employee Salary](https://leetcode.com/problems/median-employee-salary/)
 ```
