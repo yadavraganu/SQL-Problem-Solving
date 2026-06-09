@@ -5305,33 +5305,77 @@ The result is ordered first by level in ascending order
 Within the same level, employees are ordered by budget in descending order then by name in ascending order
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS EMPLOYEES;
+GO
+CREATE TABLE EMPLOYEES (
+    EMPLOYEE_ID INT,
+    EMPLOYEE_NAME VARCHAR(100) NOT NULL,
+    MANAGER_ID    INT,
+    SALARY        INT NOT NULL,
+    DEPARTMENT    VARCHAR(100)
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO EMPLOYEES (EMPLOYEE_ID, EMPLOYEE_NAME, MANAGER_ID, SALARY, DEPARTMENT) VALUES
+(1,  'Alice',   NULL, 12000, 'Executive'),
+(2,  'Bob',     1,    10000, 'Sales'),
+(3,  'Charlie', 1,    10000, 'Engineering'),
+(4,  'David',   2,     7500, 'Sales'),
+(5,  'Eva',     2,     7500, 'Sales'),
+(6,  'Frank',   3,     9000, 'Engineering'),
+(7,  'Grace',   3,     8500, 'Engineering'),
+(8,  'Hank',    4,     6000, 'Sales'),
+(9,  'Ivy',     6,     7000, 'Engineering'),
+(10, 'Judy',    6,     7000, 'Engineering');
+GO
+
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM EMPLOYEES;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
 WITH HIERARCHY AS (
+    -- Step 1: Identify the CEO (manager_id IS NULL) and assign level = 1
     SELECT EMPLOYEE_ID, EMPLOYEE_NAME, MANAGER_ID, SALARY, DEPARTMENT, 1 AS LEVEL
     FROM EMPLOYEES
     WHERE MANAGER_ID IS NULL
 
     UNION ALL
 
+    -- Step 2: Recursively assign levels to employees reporting to managers
     SELECT E.EMPLOYEE_ID, E.EMPLOYEE_NAME, E.MANAGER_ID, E.SALARY, E.DEPARTMENT, H.LEVEL + 1
     FROM EMPLOYEES E
     INNER JOIN HIERARCHY H ON E.MANAGER_ID = H.EMPLOYEE_ID
 ),
 TEAMSIZE AS (
+    -- Step 3: Base case: each employee is their own manager/member
     SELECT EMPLOYEE_ID AS MANAGER_ID, EMPLOYEE_ID AS MEMBER_ID
     FROM EMPLOYEES
 
     UNION ALL
 
+    -- Step 4: Recursively add all direct and indirect reports under each manager
     SELECT TS.MANAGER_ID, E.EMPLOYEE_ID
     FROM TEAMSIZE TS
     INNER JOIN EMPLOYEES E ON E.MANAGER_ID = TS.MEMBER_ID
 ),
 BUDGET AS (
+    -- Step 5: Calculate team size and budget for each manager
+    -- team_size = count of members - 1 (exclude manager themselves)
+    -- budget = sum of salaries of manager + all subordinates
     SELECT TS.MANAGER_ID, COUNT(*) - 1 AS TEAM_SIZE, SUM(E.SALARY) AS BUDGET
     FROM TEAMSIZE TS
     INNER JOIN EMPLOYEES E ON TS.MEMBER_ID = E.EMPLOYEE_ID
     GROUP BY TS.MANAGER_ID
 )
+-- Step 6: Final result combining hierarchy, team size, and budget
 SELECT 
     E.EMPLOYEE_ID,
     E.EMPLOYEE_NAME,
