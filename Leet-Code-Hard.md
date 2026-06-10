@@ -5241,29 +5241,46 @@ Explanation:
 The output table is ordered by invalid_count, ip in descending order respectively.
 ```
 ```sql
-SELECT L.IP,
-       COUNT(*) AS INVALID_COUNT
-FROM LOGS L
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS LOGS;
+GO
+CREATE TABLE LOGS (
+    LOG_ID INT PRIMARY KEY,
+    IP VARCHAR(50),
+    STATUS_CODE INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO LOGS (LOG_ID, IP, STATUS_CODE) VALUES
+(1, '192.168.1.1', 200),
+(2, '256.1.2.3', 404),
+(3, '192.168.001.1', 200),
+(4, '192.168.1.1', 200),
+(5, '192.168.1', 500),
+(6, '256.1.2.3', 404),
+(7, '192.168.001.1', 200);
+GO
+
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM LOGS;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
+SELECT IP, COUNT(*) AS INVALID_COUNT
+FROM LOGS
 WHERE (
-    -- IP MUST HAVE EXACTLY 4 PARTS
-    (SELECT COUNT(*) FROM STRING_SPLIT(L.IP, '.')) <> 4
-    OR
-    -- ANY PART > 255
-    EXISTS (
-        SELECT 1
-        FROM STRING_SPLIT(L.IP, '.')
-        WHERE TRY_CAST([VALUE] AS INT) > 255
-    )
-    OR
-    -- ANY PART HAS LEADING ZEROS
-    EXISTS (
-        SELECT 1
-        FROM STRING_SPLIT(L.IP, '.')
-        WHERE LEN([VALUE]) > 1 AND LEFT([VALUE], 1) = '0'
-    )
+    (SELECT COUNT(*) FROM STRING_SPLIT(IP, '.')) <> 4
+    OR EXISTS (SELECT 1 FROM STRING_SPLIT(IP, '.') WHERE TRY_CAST([VALUE] AS INT) > 255)
+    OR EXISTS (SELECT 1 FROM STRING_SPLIT(IP, '.') WHERE LEN([VALUE]) > 1 AND LEFT([VALUE],1) = '0')
 )
-GROUP BY L.IP
-ORDER BY INVALID_COUNT DESC, L.IP DESC;
+GROUP BY IP
+ORDER BY INVALID_COUNT DESC, IP DESC;
 ```
 
 # [3482. Analyze Organization Hierarchy](https://leetcode.com/problems/analyze-organization-hierarchy/)
