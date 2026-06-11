@@ -5201,46 +5201,63 @@ Total gift value for this chain = 25 + 35 = 60.
 The result table is ordered by the chain length and total gift value of the chain in descending order.
 ```
 ```sql
--- BUILD GIFT CHAINS RECURSIVELY
-WITH RECURSIVE CHAINS AS (
-  -- BASE CASE: EACH GIVER STARTS A CHAIN
-  SELECT *, GIVER_ID AS START_ID
-  FROM SECRETSANTA
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS GIFTS;
+GO
+CREATE TABLE GIFTS (
+    GIVER_ID INT NOT NULL,
+    RECEIVER_ID INT NOT NULL,
+    GIFT_VALUE INT NOT NULL
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO GIFTS (GIVER_ID, RECEIVER_ID, GIFT_VALUE) VALUES
+(1, 2, 20),
+(2, 3, 30),
+(3, 1, 40),
+(4, 5, 25),
+(5, 4, 35);
+GO
 
-  UNION ALL
-
-  -- RECURSIVE CASE: EXTEND CHAIN IF NO CYCLE
-  SELECT S.*, C.START_ID
-  FROM SECRETSANTA S
-  JOIN CHAINS C
-    ON S.GIVER_ID = C.RECEIVER_ID
-   AND S.GIVER_ID != C.START_ID
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM GIFTS;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
+-- Build chains recursively: start from each giver, follow receiver links
+WITH CHAINS AS (
+    SELECT GIVER_ID AS START_ID, GIVER_ID, RECEIVER_ID, GIFT_VALUE
+    FROM GIFTS
+    UNION ALL
+    SELECT C.START_ID, G.GIVER_ID, G.RECEIVER_ID, G.GIFT_VALUE
+    FROM GIFTS G
+    INNER JOIN CHAINS C ON G.GIVER_ID = C.RECEIVER_ID AND G.GIVER_ID <> C.START_ID
 ),
 
--- SUMMARIZE EACH CHAIN BY START_ID
+-- Summarize each chain by start_id
 CHAINSUMMARY AS (
-  SELECT
-    START_ID,
-    COUNT(*) AS CHAIN_LENGTH,
-    SUM(GIFT_VALUE) AS TOTAL_GIFT_VALUE
-  FROM CHAINS
-  GROUP BY START_ID
+    SELECT START_ID, COUNT(*) AS CHAIN_LENGTH, SUM(GIFT_VALUE) AS TOTAL_GIFT_VALUE
+    FROM CHAINS
+    GROUP BY START_ID
 ),
 
--- GET UNIQUE CHAIN PATTERNS
+-- Remove duplicates (unique chain lengths and totals)
 UNIQUECHAINS AS (
-  SELECT DISTINCT CHAIN_LENGTH, TOTAL_GIFT_VALUE
-  FROM CHAINSUMMARY
+    SELECT DISTINCT CHAIN_LENGTH, TOTAL_GIFT_VALUE
+    FROM CHAINSUMMARY
 )
 
--- RANK CHAINS BY LENGTH AND VALUE
-SELECT
-  RANK() OVER (
-    ORDER BY CHAIN_LENGTH DESC, TOTAL_GIFT_VALUE DESC
-  ) AS CHAIN_ID,
-  CHAIN_LENGTH,
-  TOTAL_GIFT_VALUE
+-- Rank chains by length first, then total value
+SELECT RANK() OVER (ORDER BY CHAIN_LENGTH DESC, TOTAL_GIFT_VALUE DESC) AS CHAIN_ID,
+       CHAIN_LENGTH, TOTAL_GIFT_VALUE
 FROM UNIQUECHAINS;
+
 ```
 
 # [3451. Find Invalid IP Addresses](https://leetcode.com/problems/find-invalid-ip-addresses/)
