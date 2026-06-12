@@ -5178,6 +5178,84 @@ First streak: 3 passes (6→7→8→6→5)
 Longest streak = 4
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS TEAMS;
+DROP TABLE IF EXISTS PASSES;
+GO
+CREATE TABLE TEAMS (
+    PLAYER_ID INT PRIMARY KEY,
+    TEAM_NAME VARCHAR(50) NOT NULL
+);
+CREATE TABLE PASSES (
+    PASS_FROM INT NOT NULL,
+    TIME_STAMP VARCHAR(10) NOT NULL,
+    PASS_TO INT NOT NULL
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO TEAMS (PLAYER_ID, TEAM_NAME) VALUES
+(1, 'Arsenal'),
+(2, 'Arsenal'),
+(3, 'Arsenal'),
+(4, 'Arsenal'),
+(5, 'Chelsea'),
+(6, 'Chelsea'),
+(7, 'Chelsea'),
+(8, 'Chelsea');
+INSERT INTO PASSES (PASS_FROM, TIME_STAMP, PASS_TO) VALUES
+(1, '00:05', 2),
+(2, '00:07', 3),
+(3, '00:08', 4),
+(4, '00:10', 5),
+(6, '00:15', 7),
+(7, '00:17', 8),
+(8, '00:20', 6),
+(6, '00:22', 5),
+(1, '00:25', 2),
+(2, '00:27', 3);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM TEAMS;
+SELECT * FROM PASSES;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
+-- FIND PASSES WHERE BOTH PLAYERS ARE ON THE SAME TEAM
+WITH PASS_TEAM AS (
+    SELECT P.PASS_FROM, P.TIME_STAMP, P.PASS_TO, FT.TEAM_NAME
+    FROM PASSES P
+    LEFT JOIN TEAMS FT ON FT.PLAYER_ID = P.PASS_FROM
+    LEFT JOIN TEAMS TT ON TT.PLAYER_ID = P.PASS_TO
+    WHERE FT.TEAM_NAME = TT.TEAM_NAME
+),
+
+-- GROUP CONSECUTIVE PASSES INTO STREAKS USING GAPS-AND-ISLANDS
+GROUPS AS (
+    SELECT *, 
+           ROW_NUMBER() OVER (ORDER BY TIME_STAMP) -
+           ROW_NUMBER() OVER (PARTITION BY TEAM_NAME ORDER BY TIME_STAMP) AS GRP
+    FROM PASS_TEAM
+),
+
+-- COUNT STREAK LENGTH PER GROUP AND RANK THEM
+PASS_STREAK AS (
+    SELECT GRP, TEAM_NAME, COUNT(*) AS LONGEST_STREAK,
+           ROW_NUMBER() OVER (PARTITION BY TEAM_NAME ORDER BY COUNT(*) DESC) AS RN
+    FROM GROUPS
+    GROUP BY GRP, TEAM_NAME
+)
+
+-- PICK THE LONGEST STREAK PER TEAM
+SELECT TEAM_NAME, LONGEST_STREAK
+FROM PASS_STREAK
+WHERE RN = 1;
+-----
 WITH PASSESWITHTEAMS AS (
     SELECT
         P.PASS_FROM,
