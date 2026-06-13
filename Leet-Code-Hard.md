@@ -5158,13 +5158,57 @@ Chelsea's passes:
 The results are ordered by team_name and then half_number
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS TEAMS;
+DROP TABLE IF EXISTS PASSES;
+GO
+CREATE TABLE TEAMS (
+    PLAYER_ID INT PRIMARY KEY,
+    TEAM_NAME VARCHAR(50) NOT NULL
+);
+CREATE TABLE PASSES (
+    PASS_FROM INT NOT NULL,
+    TIME_STAMP VARCHAR(10) NOT NULL,
+    PASS_TO INT NOT NULL
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO PASSES (PASS_FROM, TIME_STAMP, PASS_TO) VALUES
+(1, '00:15', 2),
+(2, '00:45', 3),
+(3, '01:15', 1),
+(4, '00:30', 1),
+(2, '46:00', 3),
+(3, '46:15', 4),
+(1, '46:45', 2),
+(5, '46:30', 6);
+INSERT INTO TEAMS (PLAYER_ID, TEAM_NAME) VALUES
+(1, 'Arsenal'),
+(2, 'Arsenal'),
+(3, 'Arsenal'),
+(4, 'Chelsea'),
+(5, 'Chelsea'),
+(6, 'Chelsea');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM TEAMS;
+SELECT * FROM PASSES;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
 -- COMMON TABLE EXPRESSION TO PREPARE PASS DATA WITH TEAM AND HALF INFO
 WITH T AS (
     SELECT
         T1.TEAM_NAME,
         -- DETERMINE HALF: 1 FOR FIRST HALF, 2 FOR SECOND HALF
         CASE 
-            WHEN TRY_CAST(P.TIME_STAMP AS TIME) <= '00:45:00' THEN 1 
+            WHEN TRY_CAST(CONCAT('00:', P.TIME_STAMP) AS TIME(0)) <= '00:45:00' THEN 1 
             ELSE 2 
         END AS HALF_NUMBER,
         -- +1 IF PASS WITHIN SAME TEAM, -1 IF TO OPPONENT
