@@ -4956,6 +4956,42 @@ ORDER BY S.EMPLOYEE_ID;
 ```
 
 # [3368. First Letter Capitalization](https://leetcode.com/problems/first-letter-capitalization/)
+```
+Table: user_content
++-------------+---------+
+| content_id  | int     |
+| content_text| varchar |
++-------------+---------+
+Input:
++-------------+-----------------------------------+
+| content_id  | content_text                      |
++-------------+-----------------------------------+
+| 1           | hello world of SQL                |
+| 2           | the QUICK brown fox               |
+| 3           | data science AND machine learning |
+| 4           | TOP rated programming BOOKS       |
++-------------+-----------------------------------+
+Output:
++-------------+----------------------------------+-----------------------------------+
+| content_id | original_text                     | converted_text                    |
++-------------+----------------------------------+-----------------------------------+
+| 1          | hello world of SQL                | Hello World Of SQL                |
+| 2          | the QUICK brown fox               | The Quick Brown Fox               |
+| 3          | data science AND machine learning | Data Science And Machine Learning |
+| 4          | TOP rated programming BOOKS       | Top Rated Programming Books       |
++-------------+----------------------------------+-----------------------------------+
+Explanation:
+
+For content_id = 1:
+Each word's first letter is capitalized: Hello World Of SQL
+For content_id = 2:
+Original mixed-case text is transformed to title case: The Quick Brown Fox
+For content_id = 3:
+The word AND is converted to "And": "Data Science And Machine Learning"
+For content_id = 4:
+Handles word TOP rated correctly: Top Rated
+Converts BOOKS from all caps to title case: Books
+```
 ```sql
 -- Step 1: Recursive CTE to capitalize each word in content_text
 WITH CAPITALIZED_WORDS AS (
