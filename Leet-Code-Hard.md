@@ -4993,53 +4993,80 @@ Handles word TOP rated correctly: Top Rated
 Converts BOOKS from all caps to title case: Books
 ```
 ```sql
--- Step 1: Recursive CTE to capitalize each word in content_text
-WITH CAPITALIZED_WORDS AS (
-    -- ANCHOR MEMBER: PROCESS THE FIRST WORD
-    SELECT
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS USER_CONTENT;
+GO
+CREATE TABLE USER_CONTENT (
+    CONTENT_ID INT PRIMARY KEY,
+    CONTENT_TEXT VARCHAR(255) NOT NULL
+);
+
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO USER_CONTENT (CONTENT_ID, CONTENT_TEXT) VALUES
+(1, 'hello world of SQL'),
+(2, 'the QUICK brown fox'),
+(3, 'data science AND machine learning'),
+(4, 'TOP rated programming BOOKS');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM USER_CONTENT;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
+-- STEP 1: SPLIT EACH CONTENT_TEXT INTO WORDS RECURSIVELY
+WITH SPLIT_INTO_WORDS AS (
+    SELECT 
         CONTENT_ID,
-        CONTENT_TEXT,
-        CAST(LEFT(CONTENT_TEXT, CHARINDEX(' ', CONTENT_TEXT + ' ') - 1) AS VARCHAR(MAX)) AS WORD,
-        CAST(
-            LTRIM(SUBSTRING(
-                CONTENT_TEXT,
-                CHARINDEX(' ', CONTENT_TEXT + ' ') + 1,
-                LEN(CONTENT_TEXT)
-            )) AS VARCHAR(MAX)
-        ) AS REMAINING_TEXT,
-        CAST(
-            UPPER(LEFT(LEFT(CONTENT_TEXT, CHARINDEX(' ', CONTENT_TEXT + ' ') - 1), 1)) +
-            LOWER(SUBSTRING(LEFT(CONTENT_TEXT, CHARINDEX(' ', CONTENT_TEXT + ' ') - 1), 2, LEN(CONTENT_TEXT)))
-            AS VARCHAR(MAX)
-        ) AS PROCESSED_WORD
+        TRIM(CONTENT_TEXT) AS ORIGINAL_TEXT,
+        -- FIRST WORD IN THE STRING
+        SUBSTRING(TRIM(CONTENT_TEXT), 0, CHARINDEX(' ', TRIM(CONTENT_TEXT) + ' ')) AS CURRENT_WORD,
+        -- REMAINING TEXT AFTER THE FIRST WORD
+        SUBSTRING(TRIM(CONTENT_TEXT), CHARINDEX(' ', TRIM(CONTENT_TEXT) + ' '),
+                  LEN(TRIM(CONTENT_TEXT)) - CHARINDEX(' ', TRIM(CONTENT_TEXT) + ' ') + 1) AS REMAINING_TEXT,
+        1 AS WORD_ORDER
     FROM USER_CONTENT
 
     UNION ALL
 
-    -- RECURSIVE MEMBER: PROCESS NEXT WORD AND APPEND TO PROCESSED_WORD
-    SELECT
-        CW.CONTENT_ID,
-        CW.CONTENT_TEXT,
-        LEFT(CW.REMAINING_TEXT, CHARINDEX(' ', CW.REMAINING_TEXT + ' ') - 1),
-        LTRIM(SUBSTRING(
-            CW.REMAINING_TEXT,
-            CHARINDEX(' ', CW.REMAINING_TEXT + ' ') + 1,
-            LEN(CW.REMAINING_TEXT)
-        )),
-        CW.PROCESSED_WORD + ' ' +
-        UPPER(LEFT(LEFT(CW.REMAINING_TEXT, CHARINDEX(' ', CW.REMAINING_TEXT + ' ') - 1), 1)) +
-        LOWER(SUBSTRING(LEFT(CW.REMAINING_TEXT, CHARINDEX(' ', CW.REMAINING_TEXT + ' ') - 1), 2, LEN(CW.REMAINING_TEXT)))
-    FROM CAPITALIZED_WORDS CW
-    WHERE CW.REMAINING_TEXT <> ''
+    SELECT 
+        CONTENT_ID,
+        ORIGINAL_TEXT,
+        -- NEXT WORD FROM THE REMAINING TEXT
+        SUBSTRING(TRIM(REMAINING_TEXT), 0, CHARINDEX(' ', TRIM(REMAINING_TEXT) + ' ')) AS CURRENT_WORD,
+        -- REMAINING TEXT AFTER EXTRACTING THE NEXT WORD
+        SUBSTRING(TRIM(REMAINING_TEXT), CHARINDEX(' ', TRIM(REMAINING_TEXT) + ' '),
+                  LEN(TRIM(REMAINING_TEXT)) - CHARINDEX(' ', TRIM(REMAINING_TEXT) + ' ') + 1) AS REMAINING_TEXT,
+        WORD_ORDER + 1
+    FROM SPLIT_INTO_WORDS
+    WHERE REMAINING_TEXT <> ''
+),
+
+-- STEP 2: APPLY INITCAP (CAPITALIZE FIRST LETTER, LOWERCASE THE REST)
+APPLY_INITCAP AS (
+    SELECT 
+        CONTENT_ID,
+        ORIGINAL_TEXT,
+        CONCAT(UPPER(SUBSTRING(CURRENT_WORD, 1, 1)), 
+               LOWER(SUBSTRING(CURRENT_WORD, 2, LEN(CURRENT_WORD) - 1))) AS WORD,
+        WORD_ORDER
+    FROM SPLIT_INTO_WORDS
 )
 
--- STEP 2: FINAL OUTPUT WITH ORIGINAL AND CONVERTED TEXT
-SELECT
+-- STEP 3: REBUILD THE SENTENCE WITH TRANSFORMED WORDS
+SELECT 
     CONTENT_ID,
-    CONTENT_TEXT AS ORIGINAL_TEXT,
-    MAX(PROCESSED_WORD) AS CONVERTED_TEXT
-FROM CAPITALIZED_WORDS
-GROUP BY CONTENT_ID, CONTENT_TEXT;
+    ORIGINAL_TEXT,
+    STRING_AGG(WORD, ' ') WITHIN GROUP (ORDER BY WORD_ORDER) AS CONVERTED_TEXT
+FROM APPLY_INITCAP
+GROUP BY CONTENT_ID, ORIGINAL_TEXT
+ORDER BY CONTENT_ID;
 ```
 
 # [3374. First Letter Capitalization II](https://leetcode.com/problems/first-letter-capitalization-ii/)
