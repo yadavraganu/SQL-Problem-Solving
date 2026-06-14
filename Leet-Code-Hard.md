@@ -4685,101 +4685,6 @@ ORDER BY EMPLOYEE_ID;
 
 # [3188. Find Top Scoring Students II](https://leetcode.com/problems/find-top-scoring-students-ii/)
 ```
-/*******************************************************************************
-1. SETUP: CLEAN UP AND RECREATE TABLES
-*******************************************************************************/
-DROP TABLE IF EXISTS STUDENTS;
-DROP TABLE IF EXISTS COURSES;
-DROP TABLE IF EXISTS ENROLLMENTS;
-GO
-CREATE TABLE STUDENTS (
-    STUDENT_ID INT PRIMARY KEY,
-    NAME VARCHAR(100) NOT NULL,
-    MAJOR VARCHAR(100) NOT NULL
-);
-CREATE TABLE COURSES (
-    COURSE_ID INT PRIMARY KEY,
-    NAME VARCHAR(100) NOT NULL,
-    CREDITS INT NOT NULL,
-    MAJOR VARCHAR(100) NOT NULL,
-    MANDATORY VARCHAR(3)
-);
-CREATE TABLE ENROLLMENTS (
-    STUDENT_ID INT NOT NULL,
-    COURSE_ID INT NOT NULL,
-    SEMESTER VARCHAR(20) NOT NULL,
-    GRADE VARCHAR(2) NOT NULL,
-    GPA DECIMAL(2,1) NOT NULL
-);
-GO
-/*******************************************************************************
-2. DATA ENTRY: INSERT SAMPLE DATA
-*******************************************************************************/
-INSERT INTO STUDENTS (STUDENT_ID, NAME, MAJOR) VALUES
-(1, 'Alice', 'Computer Science'),
-(2, 'Bob', 'Computer Science'),
-(3, 'Charlie', 'Mathematics'),
-(4, 'David', 'Mathematics');
-INSERT INTO COURSES (COURSE_ID, NAME, CREDITS, MAJOR, MANDATORY) VALUES
-(101, 'Algorithms', 3, 'Computer Science', 'yes'),
-(102, 'Data Structures', 3, 'Computer Science', 'yes'),
-(103, 'Calculus', 4, 'Mathematics', 'yes'),
-(104, 'Linear Algebra', 4, 'Mathematics', 'yes'),
-(105, 'Machine Learning', 3, 'Computer Science', 'no'),
-(106, 'Probability', 3, 'Mathematics', 'no'),
-(107, 'Operating Systems', 3, 'Computer Science', 'no'),
-(108, 'Statistics', 3, 'Mathematics', 'no');
-INSERT INTO ENROLLMENTS (STUDENT_ID, COURSE_ID, SEMESTER, GRADE, GPA) VALUES
-(1, 101, 'Fall 2023', 'A', 4.0),
-(1, 102, 'Spring 2023', 'A', 4.0),
-(1, 105, 'Spring 2023', 'A', 4.0),
-(1, 107, 'Fall 2023', 'B', 3.5),
-(2, 101, 'Fall 2023', 'A', 4.0),
-(2, 102, 'Spring 2023', 'B', 3.0),
-(3, 103, 'Fall 2023', 'A', 4.0),
-(3, 104, 'Spring 2023', 'A', 4.0),
-(3, 106, 'Spring 2023', 'A', 4.0),
-(3, 108, 'Fall 2023', 'B', 3.5),
-(4, 103, 'Fall 2023', 'B', 3.0),
-(4, 104, 'Spring 2023', 'B', 3.0);
-GO
-/*******************************************************************************
-3. DISPLAY INPUT DATA
-*******************************************************************************/
-SELECT * FROM STUDENTS;
-SELECT * FROM COURSES;
-SELECT * FROM ENROLLMENTS;
-/*******************************************************************************
-4. SOLUTION:
-*******************************************************************************/
--- STEP 1: FILTER STUDENTS WITH AVERAGE GPA >= 2.5
-WITH T AS (
-    SELECT STUDENT_ID
-    FROM ENROLLMENTS
-    GROUP BY STUDENT_ID
-    HAVING AVG(GPA) >= 2.5
-)
--- STEP 2: JOIN WITH STUDENTS AND THEIR MAJOR COURSES
-SELECT S.STUDENT_ID
-FROM T
-JOIN STUDENTS S ON T.STUDENT_ID = S.STUDENT_ID
-JOIN COURSES C ON S.MAJOR = C.MAJOR
-LEFT JOIN ENROLLMENTS E ON S.STUDENT_ID = E.STUDENT_ID AND C.COURSE_ID = E.COURSE_ID
-GROUP BY S.STUDENT_ID
-HAVING
-    -- ALL MANDATORY COURSES MUST HAVE GRADE 'A'
-    SUM(CASE WHEN C.MANDATORY = 'yes' AND E.GRADE = 'A' THEN 1 ELSE 0 END) = 
-    SUM(CASE WHEN C.MANDATORY = 'yes' THEN 1 ELSE 0 END)
-
-    -- All optional courses with grades must be 'A' or 'B'
-    AND SUM(CASE WHEN C.MANDATORY = 'no' AND E.GRADE IS NOT NULL THEN 1 ELSE 0 END) = 
-        SUM(CASE WHEN C.MANDATORY = 'no' AND E.GRADE IN ('A', 'B') THEN 1 ELSE 0 END)
-
-    -- At least 2 optional courses must be graded
-    AND SUM(CASE WHEN C.MANDATORY = 'no' AND E.GRADE IS NOT NULL THEN 1 ELSE 0 END) >= 2
-ORDER BY S.STUDENT_ID;
-```
-```
 Table: students
 +-------------+----------+
 | Column Name | Type     | 
@@ -4883,6 +4788,73 @@ David (student_id 4) is a Mathematics major but did not receive an A in all requ
 Note: Output table is ordered by student_id in ascending order.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS STUDENTS;
+DROP TABLE IF EXISTS COURSES;
+DROP TABLE IF EXISTS ENROLLMENTS;
+GO
+CREATE TABLE STUDENTS (
+    STUDENT_ID INT PRIMARY KEY,
+    NAME VARCHAR(100) NOT NULL,
+    MAJOR VARCHAR(100) NOT NULL
+);
+CREATE TABLE COURSES (
+    COURSE_ID INT PRIMARY KEY,
+    NAME VARCHAR(100) NOT NULL,
+    CREDITS INT NOT NULL,
+    MAJOR VARCHAR(100) NOT NULL,
+    MANDATORY VARCHAR(3)
+);
+CREATE TABLE ENROLLMENTS (
+    STUDENT_ID INT NOT NULL,
+    COURSE_ID INT NOT NULL,
+    SEMESTER VARCHAR(20) NOT NULL,
+    GRADE VARCHAR(2) NOT NULL,
+    GPA DECIMAL(2,1) NOT NULL
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO STUDENTS (STUDENT_ID, NAME, MAJOR) VALUES
+(1, 'Alice', 'Computer Science'),
+(2, 'Bob', 'Computer Science'),
+(3, 'Charlie', 'Mathematics'),
+(4, 'David', 'Mathematics');
+INSERT INTO COURSES (COURSE_ID, NAME, CREDITS, MAJOR, MANDATORY) VALUES
+(101, 'Algorithms', 3, 'Computer Science', 'yes'),
+(102, 'Data Structures', 3, 'Computer Science', 'yes'),
+(103, 'Calculus', 4, 'Mathematics', 'yes'),
+(104, 'Linear Algebra', 4, 'Mathematics', 'yes'),
+(105, 'Machine Learning', 3, 'Computer Science', 'no'),
+(106, 'Probability', 3, 'Mathematics', 'no'),
+(107, 'Operating Systems', 3, 'Computer Science', 'no'),
+(108, 'Statistics', 3, 'Mathematics', 'no');
+INSERT INTO ENROLLMENTS (STUDENT_ID, COURSE_ID, SEMESTER, GRADE, GPA) VALUES
+(1, 101, 'Fall 2023', 'A', 4.0),
+(1, 102, 'Spring 2023', 'A', 4.0),
+(1, 105, 'Spring 2023', 'A', 4.0),
+(1, 107, 'Fall 2023', 'B', 3.5),
+(2, 101, 'Fall 2023', 'A', 4.0),
+(2, 102, 'Spring 2023', 'B', 3.0),
+(3, 103, 'Fall 2023', 'A', 4.0),
+(3, 104, 'Spring 2023', 'A', 4.0),
+(3, 106, 'Spring 2023', 'A', 4.0),
+(3, 108, 'Fall 2023', 'B', 3.5),
+(4, 103, 'Fall 2023', 'B', 3.0),
+(4, 104, 'Spring 2023', 'B', 3.0);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM STUDENTS;
+SELECT * FROM COURSES;
+SELECT * FROM ENROLLMENTS;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
 -- STEP 1: FILTER STUDENTS WITH AVERAGE GPA >= 2.5
 WITH T AS (
     SELECT STUDENT_ID
@@ -4890,7 +4862,6 @@ WITH T AS (
     GROUP BY STUDENT_ID
     HAVING AVG(GPA) >= 2.5
 )
-
 -- STEP 2: JOIN WITH STUDENTS AND THEIR MAJOR COURSES
 SELECT S.STUDENT_ID
 FROM T
