@@ -4951,6 +4951,57 @@ YoY growth rate: ((2145.32 - 1246.44) / 1246.44) * 100 = 72.12%
 Note: Output table is ordered by product_id and year in ascending order.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS USER_TRANSACTIONS;
+GO
+CREATE TABLE USER_TRANSACTIONS (
+    TRANSACTION_ID INT PRIMARY KEY,
+    PRODUCT_ID INT NOT NULL,
+    SPEND DECIMAL(10,2) NOT NULL,
+    TRANSACTION_DATE DATETIME NOT NULL
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO USER_TRANSACTIONS (TRANSACTION_ID, PRODUCT_ID, SPEND, TRANSACTION_DATE) VALUES
+(1341, 123424, 1500.60, '2019-12-31 12:00:00'),
+(1423, 123424, 1000.20, '2020-12-31 12:00:00'),
+(1623, 123424, 1246.44, '2021-12-31 12:00:00'),
+(1322, 123424, 2145.32, '2022-12-31 12:00:00');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM USER_TRANSACTIONS;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
+-- STEP 1: AGGREGATE SPEND PER PRODUCT PER YEAR
+WITH YEARLY_SPEND AS (
+    SELECT 
+        YEAR(TRANSACTION_DATE) AS YEAR,
+        PRODUCT_ID,
+        SUM(SPEND) AS SPEND
+    FROM USER_TRANSACTIONS
+    GROUP BY PRODUCT_ID, YEAR(TRANSACTION_DATE)
+)
+
+-- STEP 2: COMPARE CURRENT YEAR VS PREVIOUS YEAR SPEND
+SELECT 
+    YEAR,
+    PRODUCT_ID,
+    SPEND AS CURR_YEAR_SPEND,
+    LAG(SPEND) OVER (PARTITION BY PRODUCT_ID ORDER BY YEAR ASC) AS PREV_YEAR_SPEND,
+    ROUND(
+        (SPEND - LAG(SPEND) OVER (PARTITION BY PRODUCT_ID ORDER BY YEAR ASC)) * 100.0 /
+        LAG(SPEND) OVER (PARTITION BY PRODUCT_ID ORDER BY YEAR ASC), 2
+    ) AS YOY
+FROM YEARLY_SPEND
+ORDER BY YEAR;
+--------------------------------------------------------------------
 -- Step 1: Aggregate spend per product per year
 WITH T AS (
     SELECT 
