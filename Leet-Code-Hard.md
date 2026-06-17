@@ -796,47 +796,97 @@ Result table:
 * For transactions_count >= 4, No customers visited the bank and did more than three transactions so we will stop at transactions_count = 3
 ```
 ```sql
--- GENERATE SEQUENCE FROM 0 TO MAX TRANSACTIONS PER VISIT
-WITH S AS (
-    SELECT 0 AS N
-    UNION ALL
-    SELECT N + 1
-    FROM S
-    WHERE N < (
-        SELECT MAX(CNT)
-        FROM (
-            SELECT COUNT(*) AS CNT
-            FROM TRANSACTIONS
-            GROUP BY USER_ID, TRANSACTION_DATE
-        ) AS T
-    )
-),
-
--- COUNT TRANSACTIONS PER VISIT (INCLUDE VISITS WITH 0 TRANSACTIONS)
-T AS (
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS TRANSACTIONS;
+DROP TABLE IF EXISTS VISITS;
+GO
+CREATE TABLE VISITS (
+    USER_ID INT NOT NULL,
+    VISIT_DATE DATE NOT NULL
+);
+CREATE TABLE TRANSACTIONS (
+    USER_ID INT NOT NULL,
+    TRANSACTION_DATE DATE NOT NULL,
+    AMOUNT DECIMAL(10,2) NOT NULL
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO TRANSACTIONS (USER_ID, TRANSACTION_DATE, AMOUNT) VALUES
+(1, '2020-01-02', 120),
+(2, '2020-01-03', 22),
+(7, '2020-01-11', 232),
+(1, '2020-01-04', 7),
+(9, '2020-01-25', 33),
+(9, '2020-01-25', 66),
+(8, '2020-01-28', 1),
+(9, '2020-01-25', 99);
+INSERT INTO VISITS (USER_ID, VISIT_DATE) VALUES
+(1, '2020-01-01'),
+(2, '2020-01-02'),
+(12, '2020-01-01'),
+(19, '2020-01-03'),
+(1, '2020-01-02'),
+(2, '2020-01-03'),
+(1, '2020-01-04'),
+(7, '2020-01-11'),
+(9, '2020-01-25'),
+(8, '2020-01-28');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM VISITS;
+SELECT * FROM TRANSACTIONS;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
+-- STEP 1: COUNT TRANSACTIONS PER USER PER VISIT
+WITH USER_ID_TRANS_VISIT AS (
     SELECT 
-        V.USER_ID, 
-        V.VISIT_DATE, 
-        ISNULL(T.CNT, 0) AS CNT
+        V.USER_ID,
+        V.VISIT_DATE,
+        COUNT(T.TRANSACTION_DATE) AS TRANSACTION_COUNT
     FROM VISITS V
-    LEFT JOIN (
-        SELECT 
-            USER_ID, 
-            TRANSACTION_DATE, 
-            COUNT(*) AS CNT
-        FROM TRANSACTIONS
-        GROUP BY USER_ID, TRANSACTION_DATE
-    ) T ON V.USER_ID = T.USER_ID AND V.VISIT_DATE = T.TRANSACTION_DATE
+    LEFT JOIN TRANSACTIONS T 
+        ON V.VISIT_DATE = T.TRANSACTION_DATE 
+       AND V.USER_ID = T.USER_ID
+    GROUP BY V.USER_ID, V.VISIT_DATE
+),
+-- STEP 2: AGGREGATE HOW MANY VISITS HAD EACH TRANSACTION_COUNT
+PRE_RESULT AS (
+    SELECT 
+        TRANSACTION_COUNT, 
+        COUNT(*) AS VISIT_COUNT
+    FROM USER_ID_TRANS_VISIT
+    GROUP BY TRANSACTION_COUNT
+),
+-- STEP 3: FIND THE MAXIMUM TRANSACTION_COUNT OBSERVED
+MAX_TRANSACTION_COUNT AS (
+    SELECT MAX(TRANSACTION_COUNT) AS MAX_TRANSACTION_COUNT 
+    FROM PRE_RESULT
+),
+-- STEP 4: GENERATE A SEQUENCE OF COUNTS FROM 0 UP TO MAX_TRANSACTION_COUNT
+TRANS_COUNT AS (
+    SELECT 0 AS TRANSACTION_COUNT 
+    FROM MAX_TRANSACTION_COUNT
+    UNION ALL
+    SELECT TRANSACTION_COUNT + 1
+    FROM TRANS_COUNT
+    CROSS JOIN MAX_TRANSACTION_COUNT
+    WHERE TRANSACTION_COUNT < MAX_TRANSACTION_COUNT
 )
-
--- JOIN GENERATED COUNTS WITH ACTUAL VISIT DATA
+-- STEP 5: JOIN SEQUENCE WITH ACTUAL RESULTS, FILL MISSING COUNTS WITH 0
 SELECT 
-    S.N AS TRANSACTIONS_COUNT, 
-    COUNT(T.USER_ID) AS VISITS_COUNT
-FROM S
-LEFT JOIN T ON S.N = T.CNT
-GROUP BY S.N
-ORDER BY S.N;
+    TC.TRANSACTION_COUNT,
+    ISNULL(PR.VISIT_COUNT, 0) AS VISITS_COUNT
+FROM TRANS_COUNT TC
+LEFT JOIN PRE_RESULT PR 
+       ON TC.TRANSACTION_COUNT = PR.TRANSACTION_COUNT
+ORDER BY TC.TRANSACTION_COUNT;
 ```
 
 # [1369. Get the Second Most Recent Activity](https://leetcode.com/problems/get-the-second-most-recent-activity/)
