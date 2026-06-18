@@ -4495,6 +4495,45 @@ Explanation:
 Result table orderd by employee_id, project_id in ascending order.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS EMPLOYEES;
+DROP TABLE IF EXISTS PROJECTS;
+GO
+CREATE TABLE EMPLOYEES (
+    EMPLOYEE_ID INT PRIMARY KEY,
+    NAME VARCHAR(100) NOT NULL,
+    TEAM VARCHAR(10) NOT NULL
+);
+CREATE TABLE PROJECTS (
+    PROJECT_ID INT NOT NULL,
+    EMPLOYEE_ID INT NOT NULL,
+    WORKLOAD INT NOT NULL
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO EMPLOYEES (EMPLOYEE_ID, NAME, TEAM) VALUES
+(1, 'Khaled', 'A'),
+(2, 'Ali', 'B'),
+(3, 'John', 'B'),
+(4, 'Doe', 'A');
+INSERT INTO PROJECTS (PROJECT_ID, EMPLOYEE_ID, WORKLOAD) VALUES
+(1, 1, 45),
+(1, 2, 90),
+(2, 3, 12),
+(2, 4, 68);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM EMPLOYEES;
+SELECT * FROM PROJECTS;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
 WITH EMPLOYEESWITHAVGWORKLOAD AS (
     SELECT
         E.EMPLOYEE_ID,
@@ -4503,7 +4542,7 @@ WITH EMPLOYEESWITHAVGWORKLOAD AS (
         P.PROJECT_ID,
         P.WORKLOAD AS PROJECT_WORKLOAD,
         AVG(P.WORKLOAD) OVER (PARTITION BY E.TEAM) AS AVG_TEAM_WORKLOAD
-    FROM PROJECT P
+    FROM PROJECTS P
     INNER JOIN EMPLOYEES E ON P.EMPLOYEE_ID = E.EMPLOYEE_ID
 )
 SELECT
