@@ -2209,6 +2209,53 @@ Another example is user 6:
 You can recommend pages for users 2, 3, 4, and 5 using a similar process.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS FRIENDSHIP;
+DROP TABLE IF EXISTS LIKES;
+GO
+CREATE TABLE FRIENDSHIP (
+    USER1_ID INT NOT NULL,
+    USER2_ID INT NOT NULL,
+    PRIMARY KEY (USER1_ID, USER2_ID)
+);
+CREATE TABLE LIKES (
+    USER_ID INT NOT NULL,
+    PAGE_ID INT NOT NULL,
+    PRIMARY KEY (USER_ID, PAGE_ID)
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO FRIENDSHIP (USER1_ID, USER2_ID) VALUES
+(1, 2),
+(1, 3),
+(1, 4),
+(2, 3),
+(2, 4),
+(2, 5),
+(6, 1);
+INSERT INTO LIKES (USER_ID, PAGE_ID) VALUES
+(1, 88),
+(2, 23),
+(3, 24),
+(4, 56),
+(5, 11),
+(6, 33),
+(2, 77),
+(3, 77),
+(6, 88);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM FRIENDSHIP;
+SELECT * FROM LIKES;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
 WITH FRIENDPAIRS AS (
     SELECT USER1_ID, USER2_ID FROM FRIENDSHIP
     UNION
@@ -2227,7 +2274,8 @@ WHERE NOT EXISTS (
     WHERE LX.USER_ID = F.USER1_ID
       AND LX.PAGE_ID = L.PAGE_ID
 )
-GROUP BY F.USER1_ID, L.PAGE_ID;
+GROUP BY F.USER1_ID, L.PAGE_ID
+ORDER BY 1 ,2 DESC;
 ```
 
 # [1917. Leetcodify Friends Recommendations](https://leetcode.com/problems/leetcodify-friends-recommendations/)
