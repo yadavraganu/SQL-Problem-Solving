@@ -4719,6 +4719,60 @@ WHERE TIME_DIFF <= 12;
 
 # [3061. Calculate Trapping Rain Water](https://leetcode.com/problems/calculate-trapping-rain-water/)
 ```
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS HEIGHTS;
+GO
+CREATE TABLE HEIGHTS (
+    ID INT PRIMARY KEY,
+    HEIGHT INT NOT NULL
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO HEIGHTS (ID, HEIGHT) VALUES
+(1, 0),
+(2, 1),
+(3, 0),
+(4, 2),
+(5, 1),
+(6, 0),
+(7, 1),
+(8, 3),
+(9, 2),
+(10, 1),
+(11, 2),
+(12, 1);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM HEIGHTS;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
+-- CTE TO COMPUTE LEFT AND RIGHT MAX HEIGHTS FOR EACH POSITION
+WITH T AS (
+    SELECT
+        *,
+        MAX(HEIGHT) OVER (ORDER BY ID ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS L, -- MAX TO THE LEFT
+        MAX(HEIGHT) OVER (ORDER BY ID DESC ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS R -- MAX TO THE RIGHT
+    FROM HEIGHTS
+)
+
+-- CALCULATE TRAPPED WATER AT EACH POSITION AND SUM IT
+SELECT SUM(
+    CASE 
+        WHEN L < R THEN L - HEIGHT
+        ELSE R - HEIGHT
+    END
+) AS TOTAL_TRAPPED_WATER
+FROM T
+WHERE L > HEIGHT AND R > HEIGHT; -- ONLY COUNT WHERE WATER CAN BE TRAPPED
+```
+```
 Table: Heights
 +-------------+------+
 | Column Name | Type |
