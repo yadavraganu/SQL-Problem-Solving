@@ -138,6 +138,45 @@ From sale_id = 2, we can conclude that Nokia was sold for 5000 in the year 2009.
 From sale_id = 7, we can conclude that Apple was sold for 9000 in the year 2011.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS SALES;
+DROP TABLE IF EXISTS PRODUCT;
+GO
+CREATE TABLE PRODUCT (
+    PRODUCT_ID INT PRIMARY KEY,
+    PRODUCT_NAME VARCHAR(100) NOT NULL
+);
+CREATE TABLE SALES (
+    SALE_ID INT PRIMARY KEY,
+    PRODUCT_ID INT NOT NULL,
+    YEAR INT NOT NULL,
+    QUANTITY INT NOT NULL,
+    PRICE DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (PRODUCT_ID) REFERENCES PRODUCT(PRODUCT_ID)
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO PRODUCT (PRODUCT_ID, PRODUCT_NAME) VALUES
+(100, 'Nokia'),
+(200, 'Apple'),
+(300, 'Samsung');
+INSERT INTO SALES (SALE_ID, PRODUCT_ID, YEAR, QUANTITY, PRICE) VALUES
+(1, 100, 2008, 10, 5000),
+(2, 100, 2009, 12, 5000),
+(7, 200, 2011, 15, 9000);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM PRODUCT;
+SELECT * FROM SALES;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
 SELECT
     P.PRODUCT_NAME,
     S.YEAR,
