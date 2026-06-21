@@ -38,7 +38,38 @@ Output:
 Explanation: The only pair is (1, 1) where they cooperated exactly 3 times.
 ```
 ```sql
-SELECT ACTOR_ID, DIRECTOR_ID FROM ACTORDIRECTOR GROUP BY ACTOR_ID, DIRECTOR_ID HAVING COUNT(*) >= 3
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS ACTORDIRECTOR;
+GO
+CREATE TABLE ACTORDIRECTOR (
+    ACTOR_ID INT NOT NULL,
+    DIRECTOR_ID INT NOT NULL,
+    TIMESTAMP INT NOT NULL,
+    PRIMARY KEY (ACTOR_ID, DIRECTOR_ID, TIMESTAMP)
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO ACTORDIRECTOR (ACTOR_ID, DIRECTOR_ID, TIMESTAMP) VALUES
+(1, 1, 0),
+(1, 1, 1),
+(1, 1, 2),
+(1, 2, 3),
+(1, 2, 4),
+(2, 1, 5),
+(2, 1, 6);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM ACTORDIRECTOR;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
+SELECT ACTOR_ID, DIRECTOR_ID FROM ACTORDIRECTOR GROUP BY ACTOR_ID, DIRECTOR_ID HAVING COUNT(*) >=3
 ```
 
 # [1068. Product Sales Analysis I](https://leetcode.com/problems/product-sales-analysis-i/)
