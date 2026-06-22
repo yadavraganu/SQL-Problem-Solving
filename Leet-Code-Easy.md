@@ -350,9 +350,48 @@ Output:
 Explanation: The average experience years for the first project is (3 + 2 + 1) / 3 = 2.00 and for the second project is (3 + 2) / 2 = 2.50
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS EMPLOYEE;
+DROP TABLE IF EXISTS PROJECT;
+GO
+CREATE TABLE EMPLOYEE (
+    EMPLOYEE_ID INT PRIMARY KEY,
+    NAME VARCHAR(100) NOT NULL,
+    EXPERIENCE_YEARS INT NOT NULL
+);
+CREATE TABLE PROJECT (
+    PROJECT_ID INT NOT NULL,
+    EMPLOYEE_ID INT NOT NULL
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO EMPLOYEE (EMPLOYEE_ID, NAME, EXPERIENCE_YEARS) VALUES
+(1, 'Khaled', 3),
+(2, 'Ali', 2),
+(3, 'John', 1),
+(4, 'Doe', 2);
+INSERT INTO PROJECT (PROJECT_ID, EMPLOYEE_ID) VALUES
+(1, 1),
+(1, 2),
+(1, 3),
+(2, 1),
+(2, 4);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM EMPLOYEE;
+SELECT * FROM PROJECT;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
 SELECT
     P.PROJECT_ID,
-    ROUND(AVG(E.EXPERIENCE_YEARS),2) AS AVERAGE_YEARS
+    ROUND(AVG(E.EXPERIENCE_YEARS*1.0),2) AS AVERAGE_YEARS
 FROM
     PROJECT AS P
 INNER JOIN
