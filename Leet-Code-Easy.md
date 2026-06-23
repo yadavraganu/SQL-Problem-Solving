@@ -455,6 +455,45 @@ Result table:
 The first project has 3 employees while the second one has 2.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS EMPLOYEE;
+DROP TABLE IF EXISTS PROJECT;
+GO
+CREATE TABLE EMPLOYEE (
+    EMPLOYEE_ID INT PRIMARY KEY,
+    NAME VARCHAR(100) NOT NULL,
+    EXPERIENCE_YEARS INT NOT NULL
+);
+CREATE TABLE PROJECT (
+    PROJECT_ID INT NOT NULL,
+    EMPLOYEE_ID INT NOT NULL
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO EMPLOYEE (EMPLOYEE_ID, NAME, EXPERIENCE_YEARS) VALUES
+(1, 'Khaled', 3),
+(2, 'Ali', 2),
+(3, 'John', 1),
+(4, 'Doe', 2);
+INSERT INTO PROJECT (PROJECT_ID, EMPLOYEE_ID) VALUES
+(1, 1),
+(1, 2),
+(1, 3),
+(2, 1),
+(2, 4);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM EMPLOYEE;
+SELECT * FROM PROJECT;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
 SELECT
     PROJECT_ID
 FROM
@@ -462,7 +501,7 @@ FROM
 GROUP BY
     PROJECT_ID
 HAVING
-    COUNT(EMPLOYEE_ID) = (SELECT MAX(EMPLOYEE_COUNT) FROM (SELECT COUNT(EMPLOYEE_ID) AS EMPLOYEE_COUNT FROM PROJECT GROUP BY PROJECT_ID) AS COUNTS);
+    COUNT(EMPLOYEE_ID) = (SELECT MAX(EMPLOYEE_COUNT) FROM (SELECT PROJECT_ID,COUNT(EMPLOYEE_ID) AS EMPLOYEE_COUNT FROM PROJECT GROUP BY PROJECT_ID) AS COUNTS);
 ```
 
 # [1082. Sales Analysis I](https://leetcode.com/problems/sales-analysis-i/)
