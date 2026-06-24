@@ -792,6 +792,48 @@ Result table:
 The product with id 1 was only sold in spring 2019 while the other two were sold after.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS PRODUCT;
+DROP TABLE IF EXISTS SALES;
+GO
+CREATE TABLE PRODUCT (
+    PRODUCT_ID INT PRIMARY KEY,
+    PRODUCT_NAME VARCHAR(100) NOT NULL,
+    UNIT_PRICE DECIMAL(10,2) NOT NULL
+);
+CREATE TABLE SALES (
+    SALE_ID INT PRIMARY KEY,
+    SELLER_ID INT NOT NULL,
+    PRODUCT_ID INT NOT NULL,
+    BUYER_ID INT NOT NULL,
+    SALE_DATE DATE NOT NULL,
+    QUANTITY INT NOT NULL,
+    PRICE DECIMAL(10,2) NOT NULL
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO SALES (SALE_ID, SELLER_ID, PRODUCT_ID, BUYER_ID, SALE_DATE, QUANTITY, PRICE) VALUES
+(1, 1, 1, 1, '2019-01-21', 2, 2000),
+(2, 1, 2, 2, '2019-02-17', 1, 800),
+(3, 2, 2, 3, '2019-06-02', 1, 800),
+(4, 3, 3, 4, '2019-05-13', 2, 2800);
+INSERT INTO PRODUCT (PRODUCT_ID, PRODUCT_NAME, UNIT_PRICE) VALUES
+(1, 'S8', 1000),
+(2, 'G4', 800),
+(3, 'iPhone', 1400);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM SALES;
+SELECT * FROM PRODUCT;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
 SELECT
     P.PRODUCT_ID,
     P.PRODUCT_NAME
