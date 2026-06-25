@@ -991,6 +991,41 @@ Output:
 Explanation: Note that we do not care about days with zero active users.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS ACTIVITY;
+GO
+CREATE TABLE ACTIVITY (
+    USER_ID INT NOT NULL,
+    SESSION_ID INT NOT NULL,
+    ACTIVITY_DATE DATE NOT NULL,
+    ACTIVITY_TYPE VARCHAR(50) NOT NULL
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO ACTIVITY (USER_ID, SESSION_ID, ACTIVITY_DATE, ACTIVITY_TYPE) VALUES
+(1, 1, '2019-07-20', 'open_session'),
+(1, 1, '2019-07-20', 'scroll_down'),
+(1, 1, '2019-07-20', 'end_session'),
+(2, 4, '2019-07-20', 'open_session'),
+(2, 4, '2019-07-21', 'send_message'),
+(2, 4, '2019-07-21', 'end_session'),
+(3, 2, '2019-07-21', 'open_session'),
+(3, 2, '2019-07-21', 'send_message'),
+(3, 2, '2019-07-21', 'end_session'),
+(4, 3, '2019-06-25', 'open_session'),
+(4, 3, '2019-06-25', 'end_session');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM ACTIVITY;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
 SELECT
     ACTIVITY_DATE AS DAY,
     COUNT(DISTINCT USER_ID) AS ACTIVE_USERS
@@ -1001,7 +1036,7 @@ WHERE
 GROUP BY
     ACTIVITY_DATE
 ORDER BY
-    DAY;
+    ACTIVITY_DATE;
 ```
 
 # [1142. User Activity for the Past 30 Days II](https://leetcode.com/problems/user-activity-for-the-past-30-days-ii/)
