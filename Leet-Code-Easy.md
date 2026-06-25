@@ -894,14 +894,52 @@ Result table:
 Note that we only care about report reasons with non zero number of reports.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS ACTIONS;
+GO
+CREATE TABLE ACTIONS (
+    USER_ID INT NOT NULL,
+    POST_ID INT NOT NULL,
+    ACTION_DATE DATE NOT NULL,
+    ACTION VARCHAR(20) NOT NULL,
+    EXTRA VARCHAR(50) NULL
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO ACTIONS (USER_ID, POST_ID, ACTION_DATE, ACTION, EXTRA) VALUES
+(1, 1, '2019-07-01', 'view', NULL),
+(1, 1, '2019-07-01', 'like', NULL),
+(1, 1, '2019-07-01', 'share', NULL),
+(2, 4, '2019-07-04', 'view', NULL),
+(2, 4, '2019-07-04', 'report', 'spam'),
+(3, 4, '2019-07-04', 'view', NULL),
+(3, 4, '2019-07-04', 'report', 'spam'),
+(4, 3, '2019-07-02', 'view', NULL),
+(4, 3, '2019-07-02', 'report', 'spam'),
+(5, 2, '2019-07-04', 'view', NULL),
+(5, 2, '2019-07-04', 'report', 'racism'),
+(5, 5, '2019-07-04', 'view', NULL),
+(5, 5, '2019-07-04', 'report', 'racism');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM ACTIONS;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
 SELECT
   EXTRA AS REPORT_REASON,
   COUNT(DISTINCT POST_ID) AS REPORT_COUNT
 FROM ACTIONS
 WHERE
   ACTION = 'report'
-  AND DATEDIFF('2019-07-05', ACTION_DATE) = 1
-GROUP BY 1;
+  AND DATEDIFF(DAY,ACTION_DATE,'2019-07-05') = 1
+GROUP BY EXTRA ORDER BY 2;
 ```
 
 # [1141. User Activity for the Past 30 Days I](https://leetcode.com/problems/user-activity-for-the-past-30-days-i/)
