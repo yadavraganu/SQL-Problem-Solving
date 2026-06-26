@@ -1087,16 +1087,50 @@ Result table:
 User 1 and 2 each had 1 session in the past 30 days while user 3 had 2 sessions so the average is (1 + 1 + 2) / 3 = 1.33.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS ACTIVITY;
+GO
+CREATE TABLE ACTIVITY (
+    USER_ID INT NOT NULL,
+    SESSION_ID INT NOT NULL,
+    ACTIVITY_DATE DATE NOT NULL,
+    ACTIVITY_TYPE VARCHAR(50) NOT NULL
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO ACTIVITY (USER_ID, SESSION_ID, ACTIVITY_DATE, ACTIVITY_TYPE) VALUES
+(1, 1, '2019-07-20', 'open_session'),
+(1, 1, '2019-07-20', 'scroll_down'),
+(1, 1, '2019-07-20', 'end_session'),
+(2, 4, '2019-07-20', 'open_session'),
+(2, 4, '2019-07-21', 'send_message'),
+(2, 4, '2019-07-21', 'end_session'),
+(3, 2, '2019-07-21', 'open_session'),
+(3, 2, '2019-07-21', 'send_message'),
+(3, 2, '2019-07-21', 'end_session'),
+(3, 5, '2019-07-21', 'open_session'),
+(3, 5, '2019-07-21', 'scroll_down'),
+(3, 5, '2019-07-21', 'end_session'),
+(4, 3, '2019-06-25', 'open_session'),
+(4, 3, '2019-06-25', 'end_session');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM ACTIVITY;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
 SELECT
-  IFNULL(
-    ROUND(
-      COUNT(DISTINCT SESSION_ID) / COUNT(DISTINCT USER_ID),
-      2
-    ),
-    0.00
-  ) AS AVERAGE_SESSIONS_PER_USER
-FROM ACTIVITY
-WHERE ACTIVITY_DATE BETWEEN '2019-06-28' AND  '2019-07-27';
+ROUND(COUNT(DISTINCT SESSION_ID)*1.0/COUNT(DISTINCT USER_ID),2) AS AVERAGE_SESSIONS_PER_USER
+FROM
+    ACTIVITY
+WHERE
+    ACTIVITY_DATE BETWEEN DATEADD(DAY, -29, '2019-07-27') AND '2019-07-27'
 ```
 
 # [1148. Article Views I](https://leetcode.com/problems/article-views-i/)
