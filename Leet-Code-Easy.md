@@ -1333,6 +1333,34 @@ Explanation: The revenue from Apr to Dec is null.
 Note that the result table has 13 columns (1 for the department id + 12 for the months).
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS REVENUE;
+GO
+CREATE TABLE REVENUE (
+    ID INT NOT NULL,
+    REVENUE INT NOT NULL,
+    MONTH VARCHAR(10) NOT NULL
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO REVENUE (ID, REVENUE, MONTH) VALUES
+(1, 8000, 'Jan'),
+(2, 9000, 'Jan'),
+(3, 10000, 'Feb'),
+(1, 7000, 'Feb'),
+(1, 6000, 'Mar');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM REVENUE;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
 SELECT
     ID,
     SUM(CASE WHEN MONTH = 'Jan' THEN REVENUE ELSE NULL END) AS JAN_REVENUE,
@@ -1347,25 +1375,25 @@ SELECT
     SUM(CASE WHEN MONTH = 'Oct' THEN REVENUE ELSE NULL END) AS OCT_REVENUE,
     SUM(CASE WHEN MONTH = 'Nov' THEN REVENUE ELSE NULL END) AS NOV_REVENUE,
     SUM(CASE WHEN MONTH = 'Dec' THEN REVENUE ELSE NULL END) AS DEC_REVENUE
-FROM DEPARTMENT
-GROUP BY ID
+FROM REVENUE
+GROUP BY ID;
 --------------------------------
 SELECT
     ID,
-    [Jan] AS Jan_Revenue,
-    [Feb] AS Feb_Revenue,
-    [Mar] AS Mar_Revenue,
-    [Apr] AS Apr_Revenue,
-    [May] AS May_Revenue,
-    [Jun] AS Jun_Revenue,
-    [Jul] AS Jul_Revenue,
-    [Aug] AS Aug_Revenue,
-    [Sep] AS Sep_Revenue,
-    [Oct] AS Oct_Revenue,
-    [Nov] AS Nov_Revenue,
-    [Dec] AS Dec_Revenue
+    [Jan] AS JAN_REVENUE,
+    [Feb] AS FEB_REVENUE,
+    [Mar] AS MAR_REVENUE,
+    [Apr] AS APR_REVENUE,
+    [May] AS MAY_REVENUE,
+    [Jun] AS JUN_REVENUE,
+    [Jul] AS JUL_REVENUE,
+    [Aug] AS AUG_REVENUE,
+    [Sep] AS SEP_REVENUE,
+    [Oct] AS OCT_REVENUE,
+    [Nov] AS NOV_REVENUE,
+    [Dec] AS DEC_REVENUE
 FROM (
-    SELECT ID, REVENUE, MONTH FROM DEPARTMENT
+    SELECT ID, REVENUE, MONTH FROM REVENUE
 ) S
 PIVOT (
     SUM(REVENUE)
