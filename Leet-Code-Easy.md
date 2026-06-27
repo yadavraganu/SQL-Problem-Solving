@@ -1252,12 +1252,40 @@ Result table:
 The orders with delivery id 2 and 3 are immediate while the others are scheduled.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS DELIVERY;
+GO
+CREATE TABLE DELIVERY (
+    DELIVERY_ID INT PRIMARY KEY,
+    CUSTOMER_ID INT NOT NULL,
+    ORDER_DATE DATE NOT NULL,
+    CUSTOMER_PREF_DELIVERY_DATE DATE NOT NULL
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO DELIVERY (DELIVERY_ID, CUSTOMER_ID, ORDER_DATE, CUSTOMER_PREF_DELIVERY_DATE) VALUES
+(1, 1, '2019-08-01', '2019-08-02'),
+(2, 5, '2019-08-02', '2019-08-02'),
+(3, 1, '2019-08-11', '2019-08-11'),
+(4, 3, '2019-08-24', '2019-08-26'),
+(5, 4, '2019-08-21', '2019-08-22'),
+(6, 2, '2019-08-11', '2019-08-13');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM DELIVERY;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
 SELECT 
-  CAST(
-    SUM(
-      CASE WHEN ORDER_DATE = CUSTOMER_PREF_DELIVERY_DATE THEN 1 ELSE 0 END
-    ) * 100.0 AS DECIMAL(5, 2)
-  ) / COUNT(*) AS IMMEDIATE_PERCENTAGE 
+  ROUND(
+    SUM(CASE WHEN ORDER_DATE = CUSTOMER_PREF_DELIVERY_DATE THEN 1 ELSE 0 END) * 100.0 / COUNT(*),2
+    ) AS IMMEDIATE_PERCENTAGE 
 FROM 
   DELIVERY;
 ```
