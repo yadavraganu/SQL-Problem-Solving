@@ -4374,31 +4374,55 @@ Explanation
 Output table is ordered by sessions count and user_id in descending order.
 ```
 ```sql
-WITH T AS (
-    SELECT
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS SESSIONS;
+GO
+CREATE TABLE SESSIONS (
+    USER_ID INT NOT NULL,
+    SESSION_START DATETIME NOT NULL,
+    SESSION_END DATETIME NOT NULL,
+    SESSION_ID INT PRIMARY KEY,
+    SESSION_TYPE VARCHAR(20) NOT NULL
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO SESSIONS (USER_ID, SESSION_START, SESSION_END, SESSION_ID, SESSION_TYPE) VALUES
+(101, '2023-11-06 13:53:42', '2023-11-06 14:05:42', 375, 'Viewer'),
+(101, '2023-11-22 16:45:21', '2023-11-22 20:39:21', 594, 'Streamer'),
+(102, '2023-11-16 13:23:09', '2023-11-16 16:10:09', 777, 'Streamer'),
+(102, '2023-11-17 13:23:09', '2023-11-17 16:10:09', 778, 'Streamer'),
+(101, '2023-11-20 07:16:06', '2023-11-20 08:33:06', 315, 'Streamer'),
+(104, '2023-11-27 03:10:49', '2023-11-27 03:30:49', 797, 'Viewer'),
+(103, '2023-11-27 03:10:49', '2023-11-27 03:30:49', 798, 'Streamer');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM SESSIONS;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
+WITH FIRSTSESSION AS (
+    SELECT 
         USER_ID,
         SESSION_TYPE,
-        RANK() OVER (
-            PARTITION BY USER_ID
-            ORDER BY SESSION_START
-        ) AS RK
+        ROW_NUMBER() OVER (PARTITION BY USER_ID ORDER BY SESSION_START) AS RN
     FROM SESSIONS
 )
 SELECT 
-    T.USER_ID, 
+    F.USER_ID,
     COUNT(*) AS SESSIONS_COUNT
-FROM 
-    T T
-    INNER JOIN SESSIONS S ON T.USER_ID = S.USER_ID
-WHERE 
-    T.RK = 1 
-    AND T.SESSION_TYPE = 'Viewer' 
-    AND S.SESSION_TYPE = 'Streamer'
-GROUP BY 
-    T.USER_ID
-ORDER BY 
-    SESSIONS_COUNT DESC, 
-    T.USER_ID DESC;
+FROM FIRSTSESSION F
+JOIN SESSIONS S ON F.USER_ID = S.USER_ID
+WHERE F.RN = 1
+  AND F.SESSION_TYPE = 'Viewer'
+  AND S.SESSION_TYPE = 'Streamer'
+GROUP BY F.USER_ID
+ORDER BY 2 DESC, 1 DESC;
 ```
 
 # [3052. Maximize Items](https://leetcode.com/problems/maximize-items/)
