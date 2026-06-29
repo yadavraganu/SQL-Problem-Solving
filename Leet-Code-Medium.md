@@ -1714,6 +1714,37 @@ Explanation:
 - User with user_id 4 has two transaction his first transaction was on 2021-09-02 and second transation was on 2021-09-13. The distance between the first and second transactions date is > 7 days. So he is not an active user. 
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS USERS;
+GO
+CREATE TABLE USERS (
+    USER_ID INT NOT NULL,
+    ITEM VARCHAR(100) NOT NULL,
+    CREATED_AT DATE NOT NULL,
+    AMOUNT INT NOT NULL
+);
+
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO USERS (USER_ID, ITEM, CREATED_AT, AMOUNT) VALUES
+(5, 'Smart Crock Pot', '2021-09-18', 698882),
+(6, 'Smart Lock', '2021-09-14', 11487),
+(6, 'Smart Thermostat', '2021-09-10', 674762),
+(8, 'Smart Light Strip', '2021-09-29', 630773),
+(4, 'Smart Cat Feeder', '2021-09-02', 693545),
+(4, 'Smart Bed', '2021-09-13', 170249);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM USERS;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
 SELECT DISTINCT USER_ID
 FROM USERS
 WHERE USER_ID IN (
