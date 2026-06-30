@@ -378,3 +378,70 @@ FROM
 GROUP BY 
   REQUEST_AT
 ```
+## Subscription Plan Analysis
+```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS SUBSCRIBERS;
+GO
+CREATE TABLE SUBSCRIBERS (
+  CUSTOMER_ID INT,
+  SUBSCRIPTION_DATE DATE,
+  PLAN_VALUE INT
+);
+GO
+
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO SUBSCRIBERS VALUES
+(1, '2023-03-02', 799),
+(1, '2023-04-01', 599),
+(1, '2023-05-01', 499),
+(2, '2023-04-02', 799),
+(2, '2023-07-01', 599),
+(2, '2023-09-01', 499),
+(3, '2023-01-01', 499),
+(3, '2023-04-01', 599),
+(3, '2023-07-02', 799),
+(4, '2023-04-01', 499),
+(4, '2023-09-01', 599),
+(4, '2023-10-02', 499),
+(4, '2023-11-02', 799),
+(5, '2023-10-02', 799),
+(5, '2023-11-02', 799),
+(6, '2023-03-01', 499);
+GO
+
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM SUBSCRIBERS;
+GO
+
+/*******************************************************************************
+4. SOLUTION: SAMPLE ANALYSIS
+*******************************************************************************/
+SELECT 
+COUNT(DISTINCT CUSTOMER_ID) AS UNIQUE_CUSTOMER_COUNT 
+FROM SUBSCRIBERS;
+
+SELECT 
+CUSTOMER_ID,
+MIN(PLAN_VALUE) AS MIN_SPEND,
+MAX(PLAN_VALUE) AS MAX_SPEND 
+FROM SUBSCRIBERS GROUP BY CUSTOMER_ID;
+
+WITH PREV_PLAN_DATA AS (
+SELECT 
+CUSTOMER_ID,
+PLAN_VALUE,
+LAG(PLAN_VALUE) OVER (PARTITION BY CUSTOMER_ID ORDER BY SUBSCRIPTION_DATE ASC) AS PREV_PLAN_VALUE
+FROM SUBSCRIBERS)
+SELECT CUSTOMER_ID,
+MAX(CASE WHEN PREV_PLAN_VALUE > PLAN_VALUE THEN 1 ELSE 0 END) AS DOWNGRADED_FLAG,
+MAX(CASE WHEN PREV_PLAN_VALUE < PLAN_VALUE THEN 1 ELSE 0 END) AS UPGRADED_FLAG
+FROM PREV_PLAN_DATA GROUP BY CUSTOMER_ID
+;
+```
