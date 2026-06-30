@@ -114,22 +114,59 @@ Note that we only care about dates with non zero user count.
 The user with id 5 first logged in on 2019-03-01 so he's not counted on 2019-06-21.
 ```
 ```sql
-WITH T AS (
-  SELECT
-    USER_ID,
-    MIN(ACTIVITY_DATE) OVER (PARTITION BY USER_ID) AS LOGIN_DATE
-  FROM TRAFFIC
-  WHERE
-    ACTIVITY = 'LOGIN'
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS TRAFFIC;
+GO
+CREATE TABLE TRAFFIC (
+    USER_ID INT NOT NULL,
+    ACTIVITY VARCHAR(50) NOT NULL,
+    ACTIVITY_DATE DATE NOT NULL
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO TRAFFIC (USER_ID, ACTIVITY, ACTIVITY_DATE) VALUES
+(1, 'login', '2019-05-01'),
+(1, 'homepage', '2019-05-01'),
+(1, 'logout', '2019-05-01'),
+(2, 'login', '2019-06-21'),
+(2, 'logout', '2019-06-21'),
+(3, 'login', '2019-01-01'),
+(3, 'jobs', '2019-01-01'),
+(3, 'logout', '2019-01-01'),
+(4, 'login', '2019-06-21'),
+(4, 'groups', '2019-06-21'),
+(4, 'logout', '2019-06-21'),
+(5, 'login', '2019-03-01'),
+(5, 'logout', '2019-03-01'),
+(5, 'login', '2019-06-21'),
+(5, 'logout', '2019-06-21');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM TRAFFIC;
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
+WITH FIRSTLOGIN AS (
+    SELECT 
+        USER_ID,
+        MIN(ACTIVITY_DATE) AS LOGIN_DATE
+    FROM TRAFFIC
+    WHERE ACTIVITY = 'login'
+    GROUP BY USER_ID
 )
-SELECT
-  LOGIN_DATE,
-  COUNT(DISTINCT USER_ID) AS USER_COUNT
-FROM T
-WHERE
-  DATEDIFF(DAY, LOGIN_DATE, '2019-06-30') <= 90
-GROUP BY
-  LOGIN_DATE;
+SELECT 
+    LOGIN_DATE,
+    COUNT(DISTINCT USER_ID) AS USER_COUNT
+FROM FIRSTLOGIN
+WHERE DATEDIFF(DAY, LOGIN_DATE, '2019-06-30') <= 90
+GROUP BY LOGIN_DATE
+ORDER BY LOGIN_DATE;
 ```
 
 # [1112. Highest Grade For Each Student](https://leetcode.com/problems/highest-grade-for-each-student/)
