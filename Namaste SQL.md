@@ -1,40 +1,51 @@
 ##  ICC Point Table
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS ICC_WORLD_CUP;
+GO
 CREATE TABLE ICC_WORLD_CUP
 (
-TEAM_1 VARCHAR(20),
-TEAM_2 VARCHAR(20),
-WINNER VARCHAR(20)
+  TEAM_1 VARCHAR(20),
+  TEAM_2 VARCHAR(20),
+  WINNER VARCHAR(20)
 );
+GO
+
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
 INSERT INTO ICC_WORLD_CUP VALUES('India','SL','India');
 INSERT INTO ICC_WORLD_CUP VALUES('SL','Aus','Aus');
 INSERT INTO ICC_WORLD_CUP VALUES('SA','Eng','Eng');
 INSERT INTO ICC_WORLD_CUP VALUES('Eng','NZ','NZ');
 INSERT INTO ICC_WORLD_CUP VALUES('Aus','India','India');
+GO
 
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM ICC_WORLD_CUP;
+GO
+
+/*******************************************************************************
+4. SOLUTION: POINT TABLE
+*******************************************************************************/
 SELECT 
   TEAM_NAME, 
   COUNT(*) AS MATCHES_PLAYED, 
   SUM(WIN_FLAG) AS NO_OF_WINS, 
-  COUNT(*)- SUM(WIN_FLAG) AS NO_OF_LOSSES 
-FROM 
-  (
-    SELECT 
-      TEAM_1 AS TEAM_NAME, 
-      CASE WHEN WINNER = TEAM_1 THEN 1 ELSE 0 END AS WIN_FLAG 
-    FROM 
-      ICC_WORLD_CUP 
-    UNION ALL 
-    SELECT 
-      TEAM_2 AS TEAM_NAME, 
-      CASE WHEN WINNER = TEAM_2 THEN 1 ELSE 0 END AS WIN_FLAG 
-    FROM 
-      ICC_WORLD_CUP
-  ) DATA 
-GROUP BY 
-  TEAM_NAME 
-ORDER BY 
-  3 DESC;
+  COUNT(*) - SUM(WIN_FLAG) AS NO_OF_LOSSES 
+FROM (
+    SELECT TEAM_1 AS TEAM_NAME, CASE WHEN WINNER = TEAM_1 THEN 1 ELSE 0 END AS WIN_FLAG 
+    FROM ICC_WORLD_CUP
+    UNION ALL
+    SELECT TEAM_2 AS TEAM_NAME, CASE WHEN WINNER = TEAM_2 THEN 1 ELSE 0 END AS WIN_FLAG 
+    FROM ICC_WORLD_CUP
+) DATA
+GROUP BY TEAM_NAME
+ORDER BY NO_OF_WINS DESC;
 ```
 ##  Employees having salary greater than manager
 ```sql
