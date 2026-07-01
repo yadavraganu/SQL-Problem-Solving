@@ -445,3 +445,70 @@ MAX(CASE WHEN PREV_PLAN_VALUE < PLAN_VALUE THEN 1 ELSE 0 END) AS UPGRADED_FLAG
 FROM PREV_PLAN_DATA GROUP BY CUSTOMER_ID
 ;
 ```
+## IDENTIFY COMPANIES WHOSE REVENUE IS STRICTLY INCREASING EVERY YEAR
+```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS COMPANY_REVENUE;
+GO
+CREATE TABLE COMPANY_REVENUE (
+  COMPANY VARCHAR(100),
+  YEAR INT,
+  REVENUE INT
+);
+GO
+
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO COMPANY_REVENUE VALUES
+('ABC1',2000,100),
+('ABC1',2001,110),
+('ABC1',2002,120),
+('ABC2',2000,100),
+('ABC2',2001,90),
+('ABC2',2002,120),
+('ABC3',2000,500),
+('ABC3',2001,400),
+('ABC3',2002,600),
+('ABC3',2003,800);
+GO
+
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM COMPANY_REVENUE;
+GO
+
+/*******************************************************************************
+4. SOLUTION: COMPANIES WITH ONLY POSITIVE YEAR-OVER-YEAR REVENUE
+*******************************************************************************/
+-- APPROACH 1: USING HAVING
+WITH PREV_REV_DATA AS (
+  SELECT *,
+         CASE WHEN (REVENUE - LAG(REVENUE,1,0) OVER (PARTITION BY COMPANY ORDER BY YEAR)) < 0 
+              THEN 0 ELSE 1 END AS POSITIVE_REVENUE
+  FROM COMPANY_REVENUE
+)
+SELECT COMPANY,
+       SUM(POSITIVE_REVENUE) AS POSITIVE_REVENUE_YEARS
+FROM PREV_REV_DATA
+GROUP BY COMPANY
+HAVING COUNT(*) = SUM(POSITIVE_REVENUE);
+
+-- APPROACH 2: USING NOT IN
+WITH PREV_REV_DATA AS (
+  SELECT *,
+         CASE WHEN (REVENUE - LAG(REVENUE,1,0) OVER (PARTITION BY COMPANY ORDER BY YEAR)) < 0 
+              THEN 0 ELSE 1 END AS POSITIVE_REVENUE
+  FROM COMPANY_REVENUE
+)
+SELECT COMPANY,
+       COUNT(*) AS POSITIVE_REVENUE_YEARS
+FROM PREV_REV_DATA
+WHERE COMPANY NOT IN (
+    SELECT COMPANY FROM PREV_REV_DATA WHERE POSITIVE_REVENUE = 0
+)
+GROUP BY COMPANY;
+```
