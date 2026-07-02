@@ -512,3 +512,57 @@ WHERE COMPANY NOT IN (
 )
 GROUP BY COMPANY;
 ```
+## Call Duration Analysis
+```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS CALL_DETAILS;
+GO
+CREATE TABLE CALL_DETAILS (
+  CALL_TYPE VARCHAR(10),
+  CALL_NUMBER VARCHAR(12),
+  CALL_DURATION INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO CALL_DETAILS VALUES
+('OUT','181868',13),
+('OUT','2159010',8),
+('OUT','2159010',178),
+('SMS','4153810',1),
+('OUT','2159010',152),
+('OUT','9140152',18),
+('SMS','4162672',1),
+('SMS','9168204',1),
+('OUT','9168204',576),
+('INC','2159010',5),
+('INC','2159010',4),
+('SMS','2159010',1),
+('SMS','4535614',1),
+('OUT','181868',20),
+('INC','181868',54),
+('INC','218748',20),
+('INC','2159010',9),
+('INC','197432',66),
+('SMS','2159010',1),
+('SMS','4535614',1);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM CALL_DETAILS;
+GO
+/*******************************************************************************
+4. SOLUTION: SAMPLE ANALYSIS
+*******************************************************************************/
+SELECT CALL_NUMBER
+FROM CALL_DETAILS GROUP BY CALL_NUMBER 
+HAVING 
+SUM(CASE WHEN CALL_TYPE = 'OUT' THEN CALL_DURATION ELSE 0 END) >
+SUM(CASE WHEN CALL_TYPE = 'INC' THEN CALL_DURATION ELSE 0 END) AND
+SUM(CASE WHEN CALL_TYPE = 'INC' THEN 1 ELSE 0 END) > 0 AND
+SUM(CASE WHEN CALL_TYPE = 'OUT' THEN 1 ELSE 0 END) > 0
+```
