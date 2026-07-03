@@ -1196,27 +1196,55 @@ The maximum quantity of each order is:
 Orders 1 and 3 are imbalanced because they have a maximum quantity that exceeds the average quantity of every order.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS ORDERSDETAILS;
+GO
+CREATE TABLE ORDERSDETAILS (
+  ORDER_ID INT,
+  PRODUCT_ID INT,
+  QUANTITY INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO ORDERSDETAILS VALUES
+(1,1,12),
+(1,2,10),
+(1,3,15),
+(2,1,8),
+(2,4,4),
+(2,5,6),
+(3,3,5),
+(3,4,18),
+(4,5,2),
+(4,6,8),
+(5,7,9),
+(5,8,9),
+(3,9,20),
+(2,9,4);
+GO
+
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM ORDERSDETAILS;
+GO
+
+/*******************************************************************************
+4. SOLUTION: SAMPLE ANALYSIS
+*******************************************************************************/
 SELECT 
-  ORDER_ID 
-FROM 
-  ORDERSDETAILS 
-GROUP BY 
-  ORDER_ID 
-HAVING 
-  MAX(QUANTITY) > (
-    SELECT 
-      MAX(AVG_QUANTITY) 
-    FROM 
-      (
-        SELECT 
-          ORDER_ID, 
-          SUM(QUANTITY) / COUNT(PRODUCT_ID) AS AVG_QUANTITY 
-        FROM 
-          ORDERSDETAILS 
-        GROUP BY 
-          ORDER_ID
-      ) T
-  );
+  ORDER_ID
+FROM ORDERSDETAILS
+GROUP BY ORDER_ID
+HAVING MAX(QUANTITY) > ALL (
+    SELECT AVG(QUANTITY) 
+    FROM ORDERSDETAILS 
+    GROUP BY ORDER_ID
+);
 ```
 
 # [1875. Group Employees of the Same Salary](https://leetcode.com/problems/group-employees-of-the-same-salary/)
