@@ -207,21 +207,47 @@ Result table:
 +------------+-----------+-------+
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS ENROLLMENTS;
+GO
+CREATE TABLE ENROLLMENTS (
+  STUDENT_ID INT,
+  COURSE_ID INT,
+  GRADE INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO ENROLLMENTS VALUES
+(2,2,95),
+(2,3,95),
+(1,1,90),
+(1,2,99),
+(3,1,80),
+(3,2,75),
+(3,3,82);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM ENROLLMENTS;
+GO
+/*******************************************************************************
+4. SOLUTION: SAMPLE ANALYSIS
+*******************************************************************************/
 WITH T AS (
     SELECT
         STUDENT_ID,
         COURSE_ID,
         GRADE,
-        RANK() OVER (
-            PARTITION BY STUDENT_ID
-            ORDER BY GRADE DESC, COURSE_ID
-        ) AS RK
+        RANK() OVER (PARTITION BY STUDENT_ID ORDER BY GRADE DESC, COURSE_ID) AS RK
     FROM ENROLLMENTS
 )
 SELECT
-    STUDENT_ID,
-    COURSE_ID,
-    GRADE
+    STUDENT_ID,COURSE_ID,GRADE
 FROM T
 WHERE
     RK = 1
