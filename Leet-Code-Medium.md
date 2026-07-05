@@ -546,6 +546,38 @@ The employee with employee_id 7 report his work indirectly to the head of the co
 The employees with employee_id 3, 8 and 9 don't report their work to head of company directly or indirectly.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS EMPLOYEES;
+GO
+CREATE TABLE EMPLOYEES (
+  EMPLOYEE_ID INT,
+  EMPLOYEE_NAME VARCHAR(50),
+  MANAGER_ID INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO EMPLOYEES VALUES
+(1,'Boss',1),
+(3,'Alice',3),
+(2,'Bob',1),
+(4,'Daniel',2),
+(7,'Luis',4),
+(8,'Jhon',3),
+(9,'Angela',8),
+(77,'Robert',1);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM EMPLOYEES;
+GO
+/*******************************************************************************
+4. SOLUTION: SAMPLE ANALYSIS
+*******************************************************************************/
 SELECT
     EMPLOYEE.EMPLOYEE_ID
 FROM
