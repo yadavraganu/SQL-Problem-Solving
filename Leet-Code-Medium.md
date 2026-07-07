@@ -613,25 +613,64 @@ Page 77 is suggested from both user 2 and user 3.
 Page 88 is not suggested because user 1 already likes it.
 ```
 ```sql
-WITH
-  USERTOFRIENDS AS (
-    SELECT USER1_ID AS USER_ID, USER2_ID AS FRIEND_ID FROM FRIENDSHIP
-    UNION ALL
-    SELECT USER2_ID AS USER_ID, USER1_ID AS FRIEND_ID FROM FRIENDSHIP
-  )
-SELECT FRIENDLIKES.PAGE_ID AS RECOMMENDED_PAGE
-FROM USERTOFRIENDS
-LEFT JOIN LIKES AS FRIENDLIKES
-  ON (USERTOFRIENDS.FRIEND_ID = FRIENDLIKES.USER_ID)
-LEFT JOIN LIKES AS USERLIKES
-  ON (
-    USERTOFRIENDS.USER_ID = USERLIKES.USER_ID
-    AND FRIENDLIKES.PAGE_ID = USERLIKES.PAGE_ID)
-WHERE
-  USERTOFRIENDS.USER_ID = 1
-  AND USERLIKES.PAGE_ID IS NULL
-  AND FRIENDLIKES.PAGE_ID IS NOT NULL
-GROUP BY 1;
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS FRIENDSHIP;
+DROP TABLE IF EXISTS LIKES;
+GO
+CREATE TABLE FRIENDSHIP (
+  USER1_ID INT,
+  USER2_ID INT
+);
+CREATE TABLE LIKES (
+  USER_ID INT,
+  PAGE_ID INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO FRIENDSHIP VALUES
+(1,2),
+(1,3),
+(1,4),
+(2,3),
+(2,4),
+(2,5),
+(6,1);
+
+INSERT INTO LIKES VALUES
+(1,88),
+(2,23),
+(3,24),
+(4,56),
+(5,11),
+(6,33),
+(2,77),
+(3,77),
+(6,88);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM FRIENDSHIP;
+SELECT * FROM LIKES;
+GO
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
+WITH ALL_USERS AS (
+SELECT USER1_ID AS USER_ID, USER2_ID AS FRIEND_ID FROM FRIENDSHIP
+UNION 
+SELECT USER2_ID AS USER_ID, USER1_ID AS FRIEND_ID FROM FRIENDSHIP
+), RECOMMENDATION AS (
+SELECT AU.USER_ID,AU.FRIEND_ID,FL.PAGE_ID
+FROM ALL_USERS AU
+LEFT JOIN LIKES FL  ON FL.USER_ID = AU.FRIEND_ID
+LEFT JOIN LIKES SL  ON SL.USER_ID = AU.USER_ID
+WHERE AU.USER_ID = 1 AND FL.PAGE_ID <> SL.PAGE_ID )
+SELECT DISTINCT PAGE_ID FROM RECOMMENDATION
 ```
 
 # [1270. All People Report to the Given Manager](https://leetcode.com/problems/all-people-report-to-the-given-manager/)
