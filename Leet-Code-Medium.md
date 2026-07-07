@@ -2758,19 +2758,65 @@ Jane had an outgoing call lasting 4 minutes.
 Note: Output table is sorted by type, duration, and first_name in descending order.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS CONTACTS;
+DROP TABLE IF EXISTS CALLS;
+GO
+CREATE TABLE CONTACTS (
+  ID INT,
+  FIRST_NAME VARCHAR(50),
+  LAST_NAME VARCHAR(50)
+);
+CREATE TABLE CALLS (
+  CONTACT_ID INT,
+  TYPE VARCHAR(20),
+  DURATION INT
+);
+GO
+
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO Contacts VALUES
+(1,'John','Doe'),
+(2,'Jane','Smith'),
+(3,'Alice','Johnson'),
+(4,'Michael','Brown'),
+(5,'Emily','Davis');
+
+INSERT INTO Calls VALUES
+(1,'incoming',120),
+(1,'outgoing',180),
+(2,'incoming',300),
+(2,'outgoing',240),
+(3,'incoming',150),
+(3,'outgoing',360),
+(4,'incoming',420),
+(4,'outgoing',200),
+(5,'incoming',180),
+(5,'outgoing',280);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM CONTACTS;
+SELECT * FROM CALLS;
+GO
+/*******************************************************************************
+4. SOLUTION: SAMPLE ANALYSIS
+*******************************************************************************/
 WITH T AS (
     SELECT
         C2.FIRST_NAME,
         C1.TYPE,
         C1.DURATION,
-        FORMAT(DATEADD(second, C1.DURATION, 0), 'HH:mm:ss') AS DURATION_FORMATTED,
-        RANK() OVER (
-            PARTITION BY C1.TYPE
-            ORDER BY C1.DURATION DESC
-        ) AS RK
+        FORMAT(DATEADD(SECOND, C1.DURATION, 0), 'HH:mm:ss') AS DURATION_FORMATTED,
+        RANK() OVER ( PARTITION BY C1.TYPE ORDER BY C1.DURATION DESC ) AS RK
     FROM
         CALLS AS C1
-        JOIN CONTACTS AS C2 ON C1.CONTACT_ID = C2.ID
+        LEFT JOIN CONTACTS AS C2 ON C1.CONTACT_ID = C2.ID
 )
 SELECT
     FIRST_NAME,
@@ -2778,10 +2824,7 @@ SELECT
     DURATION_FORMATTED
 FROM T
 WHERE RK <= 3
-ORDER BY
-    TYPE,
-    DURATION DESC,
-    FIRST_NAME DESC;
+ORDER BY TYPE, DURATION DESC, FIRST_NAME DESC;
 ```
 
 # [3126. Server Utilization Time](https://leetcode.com/problems/server-utilization-time/)
