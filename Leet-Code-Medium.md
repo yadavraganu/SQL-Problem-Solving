@@ -1677,7 +1677,7 @@ User 2 made 2 requests where one was confirmed and the other timed out. The conf
 ```sql
 SELECT
     S.USER_ID,
-    ISNULL(CAST(AVG(CAST(CASE WHEN C.ACTION = 'confirmed' THEN 1 ELSE 0 END AS FLOAT)) AS NUMERIC(10, 2)), 0) AS CONFIRMATION_RATE
+    ROUND(ISNULL(AVG(CASE WHEN C.ACTION = 'confirmed' THEN 1.0 ELSE 0.0 END), 0.0),2) AS CONFIRMATION_RATE
 FROM
     SIGNUPS AS S
 LEFT JOIN
