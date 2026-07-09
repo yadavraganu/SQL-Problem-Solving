@@ -515,21 +515,46 @@ Explanation: The folowing table is ordered by the turn for simplicity.
 +------+----+-----------+--------+--------------+
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS QUEUE;
+GO
+CREATE TABLE QUEUE (
+  PERSON_ID INT,
+  PERSON_NAME VARCHAR(50),
+  WEIGHT INT,
+  TURN INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO Queue VALUES
+(5,'Alice',250,1),
+(4,'Bob',175,5),
+(3,'Alex',350,2),
+(6,'John Cena',400,3),
+(1,'Winston',500,6),
+(2,'Marie',200,4);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM QUEUE;
+GO
+/*******************************************************************************
+4. SOLUTION: SAMPLE ANALYSIS
+*******************************************************************************/
 WITH RN_SM AS (
   SELECT 
-    *, 
-    SUM(WEIGHT) OVER (ORDER BY TURN ASC) AS RUN_SUM 
-  FROM 
-    QUEUE
+    *,SUM(WEIGHT) OVER (ORDER BY TURN ASC) AS RUN_SUM 
+  FROM QUEUE
 ) 
-SELECT 
-  TOP 1 PERSON_NAME 
-FROM 
-  RN_SM 
-WHERE 
-  RUN_SUM <= 1000 
-ORDER BY 
-  RUN_SUM DESC
+SELECT TOP 1 PERSON_NAME 
+FROM RN_SM 
+WHERE RUN_SUM <= 1000 
+ORDER BY RUN_SUM DESC
 ```
 
 # [1205. Monthly Transactions II](https://leetcode.com/problems/monthly-transactions-ii/)
