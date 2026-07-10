@@ -652,6 +652,51 @@ Result table:
 +------------+--------------+---------------+
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS TEAMS;
+DROP TABLE IF EXISTS MATCHES;
+GO
+CREATE TABLE TEAMS (
+  TEAM_ID INT,
+  TEAM_NAME VARCHAR(50)
+);
+
+CREATE TABLE MATCHES (
+  MATCH_ID INT,
+  HOST_TEAM INT,
+  GUEST_TEAM INT,
+  HOST_GOALS INT,
+  GUEST_GOALS INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO TEAMS VALUES
+(10,'Leetcode FC'),
+(20,'NewYork FC'),
+(30,'Atlanta FC'),
+(40,'Chicago FC'),
+(50,'Toronto FC');
+
+INSERT INTO MATCHES VALUES
+(1,10,20,3,0),
+(2,30,10,2,2),
+(3,10,50,5,1),
+(4,20,30,1,0),
+(5,50,30,1,0);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM TEAMS;
+SELECT * FROM MATCHES;
+GO
+/*******************************************************************************
+4. SOLUTION:
+*******************************************************************************/
 WITH TWOWAYMATCHES AS (
     SELECT
         HOST_TEAM AS TEAM_ID,
