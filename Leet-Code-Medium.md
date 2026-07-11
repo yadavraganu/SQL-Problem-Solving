@@ -472,21 +472,38 @@ The customer id 4 has a first order with delivery id 7 and it is immediate.
 Hence, half the customers have immediate first orders.
 ```
 ```sql
-WITH FIRSTORDERS AS (
-    SELECT
-        CUSTOMER_ID,
-        ORDER_DATE,
-        CUSTOMER_PREF_DELIVERY_DATE,
-        ROW_NUMBER() OVER (PARTITION BY CUSTOMER_ID ORDER BY ORDER_DATE) AS RN
-    FROM
-        DELIVERY
-)
-SELECT
-    ROUND(SUM(CASE WHEN ORDER_DATE = CUSTOMER_PREF_DELIVERY_DATE THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS IMMEDIATE_PERCENTAGE
-FROM
-    FIRSTORDERS
-WHERE
-    RN = 1;
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS DELIVERY;
+GO
+CREATE TABLE DELIVERY (
+  DELIVERY_ID INT,
+  CUSTOMER_ID INT,
+  ORDER_DATE DATE,
+  CUSTOMER_PREF_DELIVERY_DATE DATE
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO DELIVERY VALUES
+(1,1,'2019-08-01','2019-08-02'),
+(2,2,'2019-08-02','2019-08-02'),
+(3,1,'2019-08-11','2019-08-12'),
+(4,3,'2019-08-24','2019-08-24'),
+(5,3,'2019-08-21','2019-08-22'),
+(6,2,'2019-08-11','2019-08-13'),
+(7,4,'2019-08-09','2019-08-09');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM DELIVERY;
+GO
+/*******************************************************************************
+4. SOLUTION: SAMPLE ANALYSIS
+*******************************************************************************/
 ```
 
 # [1193. Monthly Transactions I](https://leetcode.com/problems/monthly-transactions-i/)
