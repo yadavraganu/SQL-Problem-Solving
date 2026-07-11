@@ -1140,6 +1140,63 @@ Alex has one contact and it is a trusted contact (Alice).
 John doesn't have any contacts.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS CUSTOMERS;
+DROP TABLE IF EXISTS CONTACTS;
+DROP TABLE IF EXISTS INVOICES;
+GO
+CREATE TABLE CUSTOMERS (
+  CUSTOMER_ID INT,
+  CUSTOMER_NAME VARCHAR(50),
+  EMAIL VARCHAR(100)
+);
+CREATE TABLE CONTACTS (
+  USER_ID INT,
+  CONTACT_NAME VARCHAR(50),
+  CONTACT_EMAIL VARCHAR(100)
+);
+CREATE TABLE INVOICES (
+  INVOICE_ID INT,
+  PRICE INT,
+  USER_ID INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO Customers VALUES
+(1,'Alice','alice@leetcode.com'),
+(2,'Bob','bob@leetcode.com'),
+(13,'John','john@leetcode.com'),
+(6,'Alex','alex@leetcode.com');
+INSERT INTO Contacts VALUES
+(1,'Bob','bob@leetcode.com'),
+(1,'John','john@leetcode.com'),
+(1,'Jal','jal@leetcode.com'),
+(2,'Omar','omar@leetcode.com'),
+(2,'Meir','meir@leetcode.com'),
+(6,'Alice','alice@leetcode.com');
+INSERT INTO INVOICES VALUES
+(77,100,1),
+(88,200,1),
+(99,300,2),
+(66,400,2),
+(55,500,13),
+(44,60,6);
+GO
+
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM CUSTOMERS;
+SELECT * FROM CONTACTS;
+SELECT * FROM INVOICES;
+GO
+/*******************************************************************************
+4. SOLUTION: SAMPLE ANALYSIS
+*******************************************************************************/
 SELECT
     T1.INVOICE_ID,
     T2.CUSTOMER_NAME,
