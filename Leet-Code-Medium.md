@@ -3584,16 +3584,76 @@ David (student_id 4) is a Mathematics major but did not receive an 'A' in all re
 Note: Output table is ordered by student_id in ascending order.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS STUDENTS;
+DROP TABLE IF EXISTS COURSES;
+DROP TABLE IF EXISTS ENROLLMENTS;
+GO
+CREATE TABLE STUDENTS (
+  STUDENT_ID INT,
+  NAME VARCHAR(50),
+  MAJOR VARCHAR(50)
+);
+CREATE TABLE COURSES (
+  COURSE_ID INT,
+  NAME VARCHAR(50),
+  CREDITS INT,
+  MAJOR VARCHAR(50)
+);
+CREATE TABLE ENROLLMENTS (
+  STUDENT_ID INT,
+  COURSE_ID INT,
+  SEMESTER VARCHAR(20),
+  GRADE CHAR(1)
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO STUDENTS VALUES
+(1,'Alice','Computer Science'),
+(2,'Bob','Computer Science'),
+(3,'Charlie','Mathematics'),
+(4,'David','Mathematics');
+
+INSERT INTO COURSES VALUES
+(101,'Algorithms',3,'Computer Science'),
+(102,'Data Structures',3,'Computer Science'),
+(103,'Calculus',4,'Mathematics'),
+(104,'Linear Algebra',4,'Mathematics');
+
+INSERT INTO ENROLLMENTS VALUES
+(1,101,'Fall 2023','A'),
+(1,102,'Fall 2023','A'),
+(2,101,'Fall 2023','B'),
+(2,102,'Fall 2023','A'),
+(3,103,'Fall 2023','A'),
+(3,104,'Fall 2023','A'),
+(4,103,'Fall 2023','A'),
+(4,104,'Fall 2023','B');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM STUDENTS;
+SELECT * FROM COURSES;
+SELECT * FROM ENROLLMENTS;
+GO
+/*******************************************************************************
+4. SOLUTION: SAMPLE ANALYSIS
+*******************************************************************************/
 SELECT
-    STUDENT_ID
+    S.STUDENT_ID
 FROM
     STUDENTS S
-    JOIN COURSES C ON S.MAJOR = C.MAJOR
+    LEFT JOIN COURSES C ON S.MAJOR = C.MAJOR
     LEFT JOIN ENROLLMENTS E ON S.STUDENT_ID = E.STUDENT_ID AND C.COURSE_ID = E.COURSE_ID
 GROUP BY
     S.STUDENT_ID
 HAVING
-    SUM(CASE WHEN E.GRADE = 'A' THEN 1 ELSE 0 END) = COUNT(C.MAJOR)
+    SUM(CASE WHEN E.GRADE = 'A' THEN 1 ELSE 0 END) = COUNT(C.COURSE_ID)
 ORDER BY
     S.STUDENT_ID;
 ```
