@@ -457,25 +457,54 @@ Average for 'reviews', 'ads' and 'page views' are (7+3)/2=5, (11+7+6)/3=8, (3+12
 Business with id 1 has 7 'reviews' events (more than 5) and 11 'ads' events (more than 8) so it is an active business.
 ```
 ```sql
-SELECT
-  T1.BUSINESS_ID
-FROM
-  EVENTS AS T1
-  JOIN (
-    SELECT
-      EVENT_TYPE,
-      AVG(OCCURENCES) AS OCCURENCES
-    FROM EVENTS
-    GROUP BY
-      EVENT_TYPE
-  ) AS T2
-    ON T1.EVENT_TYPE = T2.EVENT_TYPE
-WHERE
-  T1.OCCURENCES > T2.OCCURENCES
-GROUP BY
-  T1.BUSINESS_ID
-HAVING
-  COUNT(*) > 1;
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS EVENTS;
+GO
+
+CREATE TABLE EVENTS (
+  BUSINESS_ID INT,
+  EVENT_TYPE VARCHAR(50),
+  OCCURENCES INT
+);
+GO
+
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO EVENTS VALUES
+(1,'reviews',7),
+(3,'reviews',3),
+(1,'ads',11),
+(2,'ads',7),
+(3,'ads',6),
+(1,'page views',3),
+(2,'page views',12);
+GO
+
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM EVENTS;
+GO
+
+/*******************************************************************************
+4. SOLUTION
+*******************************************************************************/
+WITH AVG_ACROSS_ALL AS (
+SELECT 
+EVENT_TYPE,
+AVG(OCCURENCES) AS OCCURENCES
+FROM EVENTS
+GROUP BY EVENT_TYPE
+)
+SELECT T1.BUSINESS_ID
+FROM EVENTS AS T1
+JOIN AVG_ACROSS_ALL T2 ON T1.EVENT_TYPE = T2.EVENT_TYPE
+WHERE T1.OCCURENCES > T2.OCCURENCES
+GROUP BY T1.BUSINESS_ID
+HAVING COUNT(*) > 1;
 ```
 
 # [1132. Reported Posts II](https://leetcode.com/problems/reported-posts-ii/)
