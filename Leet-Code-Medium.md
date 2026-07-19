@@ -2284,32 +2284,85 @@ We can see that the income exceeded the max income in May and July, but not in J
 exceed the max income for two consecutive months, we do not include it in the result table.
 ```
 ```sql
-WITH SUSPICIOUSACCOUNTTOMONTH AS (
-    -- 1. IDENTIFY MONTHS WITH SUSPICIOUS INCOME
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS ACCOUNTS;
+DROP TABLE IF EXISTS TRANSACTIONS;
+GO
+
+CREATE TABLE ACCOUNTS (
+  ACCOUNT_ID INT,
+  MAX_INCOME INT
+);
+
+CREATE TABLE TRANSACTIONS (
+  TRANSACTION_ID INT,
+  ACCOUNT_ID INT,
+  TYPE VARCHAR(20),
+  AMOUNT INT,
+  DAY DATETIME
+);
+GO
+
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO ACCOUNTS VALUES
+(3,21000),
+(4,10400);
+
+INSERT INTO TRANSACTIONS VALUES
+(2,3,'Creditor',107100,'2021-06-02 11:38:14'),
+(4,4,'Creditor',10400,'2021-06-20 12:39:18'),
+(11,4,'Debtor',58800,'2021-07-23 12:41:55'),
+(1,4,'Creditor',49300,'2021-05-03 16:11:04'),
+(15,3,'Debtor',75500,'2021-05-23 14:40:20'),
+(10,3,'Creditor',102100,'2021-06-15 10:37:16'),
+(14,4,'Creditor',56300,'2021-07-21 12:12:25'),
+(19,4,'Debtor',101100,'2021-05-09 15:21:49'),
+(8,3,'Creditor',64900,'2021-07-26 15:09:56'),
+(7,3,'Creditor',90900,'2021-06-14 11:23:07');
+GO
+
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM ACCOUNTS;
+SELECT * FROM TRANSACTIONS;
+GO
+
+/*******************************************************************************
+4. SOLUTION
+*******************************************************************************/
+WITH INCOMEFROMTRANSACTIONS AS (
     SELECT
+        ACCOUNT_ID,
+        FORMAT(DAY, 'yyyyMM') AS YRMTH,
+        SUM(AMOUNT) AS INCOME
+    FROM TRANSACTIONS
+    WHERE TYPE = 'Creditor'
+    GROUP BY ACCOUNT_ID, FORMAT(DAY, 'yyyyMM')
+),
+SUSPICIOUSACCOUNT AS (
+    SELECT 
         T.ACCOUNT_ID,
-        FORMAT(T.DAY, 'YYYYMM') AS MONTH_STR
-    FROM
-        TRANSACTIONS AS T
-    INNER JOIN
-        ACCOUNTS AS A ON T.ACCOUNT_ID = A.ACCOUNT_ID
-    WHERE
-        T.TYPE = 'Creditor'
-    GROUP BY
-        T.ACCOUNT_ID,
-        FORMAT(T.DAY, 'YYYYMM')
-    HAVING
-        SUM(T.AMOUNT) > A.MAX_INCOME
+        T.YRMTH
+    FROM INCOMEFROMTRANSACTIONS T
+    INNER JOIN ACCOUNTS A 
+        ON T.ACCOUNT_ID = A.ACCOUNT_ID
+    WHERE T.INCOME > A.MAX_INCOME
 )
--- 2. FIND ACCOUNTS WITH CONSECUTIVE SUSPICIOUS MONTHS USING A SELF-JOIN
 SELECT DISTINCT
-    CURRMONTH.ACCOUNT_ID
-FROM
-    SUSPICIOUSACCOUNTTOMONTH AS CURRMONTH
-INNER JOIN
-    SUSPICIOUSACCOUNTTOMONTH AS NEXTMONTH ON CURRMONTH.ACCOUNT_ID = NEXTMONTH.ACCOUNT_ID
-WHERE
-    DATEDIFF(MONTH, CONVERT(DATE, CURRMONTH.MONTH_STR + '01'), CONVERT(DATE, NEXTMONTH.MONTH_STR + '01')) = 1;
+    A.ACCOUNT_ID
+FROM SUSPICIOUSACCOUNT A
+INNER JOIN SUSPICIOUSACCOUNT B 
+    ON A.ACCOUNT_ID = B.ACCOUNT_ID
+   AND DATEDIFF(
+         MONTH, 
+         CONVERT(DATE, A.YRMTH + '01'), 
+         CONVERT(DATE, B.YRMTH + '01')
+       ) = 1;
 ```
 
 # [1867. Orders With Maximum Quantity Above Average](https://leetcode.com/problems/orders-with-maximum-quantity-above-average/)
