@@ -2805,21 +2805,46 @@ Account 2:
 - 2021-12-12 --> withdraw 7000. Balance is 7000 - 7000 = 0.
 ```
 ```sql
-SELECT
-    ACCOUNT_ID,
-    DAY,
-    SUM(CASE
-        WHEN TYPE = 'Deposit' THEN AMOUNT
-        ELSE -AMOUNT
-    END) OVER (
-        PARTITION BY ACCOUNT_ID
-        ORDER BY DAY
-    ) AS BALANCE
-FROM
-    TRANSACTIONS
-ORDER BY
-    ACCOUNT_ID,
-    DAY;
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS TRANSACTIONS;
+GO
+
+CREATE TABLE TRANSACTIONS (
+  ACCOUNT_ID INT,
+  DAY DATE,
+  TYPE VARCHAR(20),
+  AMOUNT INT
+);
+GO
+
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO TRANSACTIONS VALUES
+(1,'2021-11-07','Deposit',2000),
+(1,'2021-11-09','Withdraw',1000),
+(1,'2021-11-11','Deposit',3000),
+(2,'2021-12-07','Deposit',7000),
+(2,'2021-12-12','Withdraw',7000);
+GO
+
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM TRANSACTIONS;
+GO
+
+/*******************************************************************************
+4. SOLUTION
+*******************************************************************************/
+SELECT 
+ACCOUNT_ID,
+DAY,
+SUM(CASE WHEN TYPE = 'Deposit' THEN AMOUNT ELSE -1*AMOUNT END) OVER(PARTITION BY ACCOUNT_ID ORDER BY DAY ASC) AS BALANCE
+FROM 
+TRANSACTIONS
 ```
 
 # [2084. Drop Type 1 Orders for Customers With Type 0 Orders](https://leetcode.com/problems/drop-type-1-orders-for-customers-with-type-0-orders/)
