@@ -212,7 +212,8 @@ Table: Employee
 +------------------+---------+
 employee_id is the primary key of this table.
  
-Write an SQL query that reports the most experienced employees in each  project. In case of a tie, report all employees with the maximum number of experience years.
+Write an SQL query that reports the most experienced employees in each  project. In case of a tie, report all
+employees with the maximum number of experience years.
 The query result format is in the following example:
 
 Project table:
