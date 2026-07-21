@@ -246,6 +246,52 @@ Result table:
 Both employees with id 1 and 3 have the most experience among the employees of the first project. For the second project, the employee with id 1 has the most experience.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS PROJECT;
+DROP TABLE IF EXISTS EMPLOYEE;
+GO
+
+CREATE TABLE PROJECT (
+  PROJECT_ID INT,
+  EMPLOYEE_ID INT
+);
+
+CREATE TABLE EMPLOYEE (
+  EMPLOYEE_ID INT,
+  NAME VARCHAR(50),
+  EXPERIENCE_YEARS INT
+);
+GO
+
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO PROJECT VALUES
+(1,1),
+(1,2),
+(1,3),
+(2,1),
+(2,4);
+
+INSERT INTO EMPLOYEE VALUES
+(1,'Khaled',3),
+(2,'Ali',2),
+(3,'John',3),
+(4,'Doe',2);
+GO
+
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM PROJECT;
+SELECT * FROM EMPLOYEE;
+GO
+
+/*******************************************************************************
+4. SOLUTION
+*******************************************************************************/
 SELECT
     PROJECT_ID,
     EMPLOYEE_ID
@@ -257,7 +303,7 @@ FROM (
         AS MAXEXP
     FROM PROJECT AS P JOIN EMPLOYEE AS E
     ON P.EMPLOYEE_ID = E.EMPLOYEE_ID
-    ) 
+    ) A
 WHERE MAXEXP = 1
 ```
 
