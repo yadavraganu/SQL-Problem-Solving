@@ -3478,6 +3478,36 @@ Explanation:
 - The word "bear" appears 1 time in "draft2.txt", and 1 time in "draft3.txt". Therefore, the total number of occurrences for the word "bear" is 2.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS FILES;
+GO
+
+CREATE TABLE FILES (
+  FILE_NAME VARCHAR(50),
+  CONTENT VARCHAR(MAX)
+);
+GO
+
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO FILES VALUES
+('draft1.txt','The stock exchange predicts a bull market which would make many investors happy.'),
+('draft2.txt','The stock exchange predicts a bull market which would make many investors happy, but analysts warn of possibility of too much optimism and that in fact we are awaiting a bear market.'),
+('draft3.txt','The stock exchange predicts a bull market which would make many investors happy, but analysts warn of possibility of too much optimism and that in fact we are awaiting a bear market. As always predicting the future market is an uncertain game and all investors should follow their instincts and best practices.');
+GO
+
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM FILES;
+GO
+
+/*******************************************************************************
+4. SOLUTION
+*******************************************************************************/
 SELECT 'bull' AS WORD, COUNT(*) AS COUNT
 FROM FILES
 WHERE CONTENT LIKE '% bull %'
