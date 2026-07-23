@@ -4289,39 +4289,52 @@ Total fee paid: 6.00, total hours: 4.5, average hourly fee: 1.33, most time spen
 Note: Output table is ordered by car_id in ascending order.
 ```
 ```sql
-WITH
-    T AS (
-        SELECT
-            CAR_ID,
-            LOT_ID,
-            SUM(DATEDIFF(SECOND, ENTRY_TIME, EXIT_TIME)) AS DURATION
-        FROM PARKINGTRANSACTIONS
-        GROUP BY CAR_ID, LOT_ID
-    ),
-    P AS (
-        SELECT
-            *,
-            RANK() OVER (
-                PARTITION BY CAR_ID
-                ORDER BY DURATION DESC
-            ) AS RK
-        FROM T
-    )
-SELECT
-    T1.CAR_ID,
-    SUM(T1.FEE_PAID) AS TOTAL_FEE_PAID,
-    ROUND(
-        SUM(CAST(T1.FEE_PAID AS FLOAT)) / (SUM(DATEDIFF(SECOND, T1.ENTRY_TIME, T1.EXIT_TIME)) / 3600.0),
-        2
-    ) AS AVG_HOURLY_FEE,
-    T2.LOT_ID AS MOST_TIME_LOT
-FROM
-    PARKINGTRANSACTIONS AS T1
-    LEFT JOIN P AS T2 ON T1.CAR_ID = T2.CAR_ID AND T2.RK = 1
-GROUP BY
-    T1.CAR_ID,
-    T2.LOT_ID
-ORDER BY T1.CAR_ID;
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS PARKINGTRANSACTIONS;
+GO
+CREATE TABLE PARKINGTRANSACTIONS (
+  LOT_ID INT,
+  CAR_ID INT,
+  ENTRY_TIME DATETIME,
+  EXIT_TIME DATETIME,
+  FEE_PAID DECIMAL(10,2)
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO PARKINGTRANSACTIONS VALUES
+(1,1001,'2023-06-01 08:00:00','2023-06-01 10:30:00',5.00),
+(1,1001,'2023-06-02 11:00:00','2023-06-02 12:45:00',3.00),
+(2,1001,'2023-06-01 10:45:00','2023-06-01 12:00:00',6.00),
+(2,1002,'2023-06-01 09:00:00','2023-06-01 11:30:00',4.00),
+(3,1001,'2023-06-03 07:00:00','2023-06-03 09:00:00',4.00),
+(3,1002,'2023-06-02 12:00:00','2023-06-02 14:00:00',2.00);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM PARKINGTRANSACTIONS;
+GO
+/*******************************************************************************
+4. SOLUTION
+*******************************************************************************/
+WITH ADDED_TIME_SPENT AS (
+SELECT *, DATEDIFF(MINUTE,ENTRY_TIME,EXIT_TIME)*1.00 AS TIME_SPENT FROM PARKINGTRANSACTIONS
+), ADDED_MOST_TIME_LOT AS (
+SELECT 
+*,
+FIRST_VALUE(LOT_ID) OVER(PARTITION BY CAR_ID ORDER BY TIME_SPENT DESC) AS MOST_TIME_LOT 
+FROM ADDED_TIME_SPENT
+)
+SELECT 
+CAR_ID,
+SUM(FEE_PAID) AS TOTAL_FEE_PAID,
+ROUND(SUM(FEE_PAID)*60/SUM(TIME_SPENT),2) AS AVG_HOURLY_FEE,
+MOST_TIME_LOT
+FROM ADDED_MOST_TIME_LOT GROUP BY CAR_ID,MOST_TIME_LOT
 ```
 
 # [3182. Find Top Scoring Students](https://leetcode.com/problems/find-top-scoring-students/)
