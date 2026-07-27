@@ -3128,35 +3128,53 @@ Airport 6 was engaged with 7 flights (7 arrivals).
 The airports with the most traffic are airports 1, 2, 3, and 4.
 ```
 ```sql
-WITH
-    AIRPORTTOCOUNT AS (
-        SELECT
-            DEPARTURE_AIRPORT AS AIRPORT_ID,
-            FLIGHTS_COUNT
-        FROM
-            FLIGHTS
-        UNION ALL
-        SELECT
-            ARRIVAL_AIRPORT AS AIRPORT_ID,
-            FLIGHTS_COUNT
-        FROM
-            FLIGHTS
-    ),
-    RANKEDAIRPORTS AS (
-        SELECT
-            AIRPORT_ID,
-            RANK() OVER (ORDER BY SUM(FLIGHTS_COUNT) DESC) AS RANK
-        FROM
-            AIRPORTTOCOUNT
-        GROUP BY
-            AIRPORT_ID
-    )
-SELECT
-    AIRPORT_ID
-FROM
-    RANKEDAIRPORTS
-WHERE
-    RANK = 1;
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS FLIGHTS;
+GO
+
+CREATE TABLE FLIGHTS (
+  DEPARTURE_AIRPORT INT,
+  ARRIVAL_AIRPORT INT,
+  FLIGHTS_COUNT INT
+);
+GO
+
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO FLIGHTS VALUES
+(1,2,4),
+(2,1,5),
+(3,4,5),
+(4,3,4),
+(5,6,7);
+GO
+
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM FLIGHTS;
+GO
+
+/*******************************************************************************
+4. SOLUTION
+*******************************************************************************/
+WITH AIRPORTTOCOUNT AS (
+SELECT DEPARTURE_AIRPORT AS AIRPORT_ID,FLIGHTS_COUNT FROM FLIGHTS
+UNION ALL
+SELECT ARRIVAL_AIRPORT AS AIRPORT_ID,FLIGHTS_COUNT FROM FLIGHTS
+),RANKEDAIRPORTS AS (
+SELECT 
+AIRPORT_ID,
+RANK() OVER (ORDER BY SUM(FLIGHTS_COUNT) DESC) AS RANK
+FROM AIRPORTTOCOUNT
+GROUP BY AIRPORT_ID
+)
+SELECT AIRPORT_ID
+FROM RANKEDAIRPORTS
+WHERE RANK = 1;
 ```
 
 # [2142. The Number of Passengers in Each Bus I](https://leetcode.com/problems/the-number-of-passengers-in-each-bus-i/)
