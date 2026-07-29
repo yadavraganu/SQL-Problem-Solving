@@ -2784,6 +2784,35 @@ The team IDs are assigned as follows (based on salary ranking, lowest first):
 Juan's salary of 6100 is not included in the ranking because they are not on a team.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS EMPLOYEES;
+GO
+CREATE TABLE EMPLOYEES (
+  EMPLOYEE_ID INT,
+  NAME VARCHAR(50),
+  SALARY INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO EMPLOYEES VALUES
+(2,'Meir',3000),
+(3,'Michael',3000),
+(7,'Addilyn',7400),
+(8,'Juan',6100),
+(9,'Kannon',7400);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM EMPLOYEES;
+GO
+/*******************************************************************************
+4. SOLUTION
+*******************************************************************************/
 WITH
   EMPLOYEESWITHCOUNTPERSALARY AS (
     SELECT
