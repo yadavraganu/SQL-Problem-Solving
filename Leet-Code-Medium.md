@@ -3318,23 +3318,38 @@ Customer 3 has one order of type 0 and one order of type 1. We only return the o
 Customer 4 has two orders of type 1. We return both of them.
 ```
 ```sql
-SELECT
-    ORDER_ID,
-    CUSTOMER_ID,
-    ORDER_TYPE
-FROM
-    ORDERS
-WHERE
-    ORDER_TYPE = 0
-    OR CUSTOMER_ID NOT IN (
-        SELECT
-            CUSTOMER_ID
-        FROM
-            ORDERS
-        WHERE
-            ORDER_TYPE = 0
-    );
--------------
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS ORDERS;
+GO
+CREATE TABLE ORDERS (
+  ORDER_ID INT,
+  CUSTOMER_ID INT,
+  ORDER_TYPE INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO ORDERS VALUES
+(1,1,0),
+(2,1,0),
+(11,2,0),
+(12,2,1),
+(21,3,1),
+(22,3,0),
+(31,4,1),
+(32,4,1);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM ORDERS;
+GO
+/*******************************************************************************
+4. SOLUTION
+*******************************************************************************/
 WITH
   RANKEDORDERS AS (
     SELECT
