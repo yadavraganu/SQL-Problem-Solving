@@ -2910,15 +2910,104 @@ WHERE
 ```
 
 # [183. Customers Who Never Order](https://leetcode.com/problems/customers-who-never-order/)
+```
+Table: Customers
++-------------+---------+
+| Column Name | Type    |
++-------------+---------+
+| id          | int     |
+| name        | varchar |
++-------------+---------+
+id is the primary key (column with unique values) for this table.
+Each row of this table indicates the ID and name of a customer.
+
+Table: Orders
++-------------+------+
+| Column Name | Type |
++-------------+------+
+| id          | int  |
+| customerId  | int  |
++-------------+------+
+id is the primary key (column with unique values) for this table.
+customerId is a foreign key (reference columns) of the ID from the Customers table.
+Each row of this table indicates the ID of an order and the ID of the customer who ordered it.
+ 
+Write a solution to find all customers who never order anything.
+Return the result table in any order.
+
+The result format is in the following example.
+
+Example 1:
+
+Input: 
+Customers table:
++----+-------+
+| id | name  |
++----+-------+
+| 1  | Joe   |
+| 2  | Henry |
+| 3  | Sam   |
+| 4  | Max   |
++----+-------+
+Orders table:
++----+------------+
+| id | customerId |
++----+------------+
+| 1  | 3          |
+| 2  | 1          |
++----+------------+
+Output: 
++-----------+
+| Customers |
++-----------+
+| Henry     |
+| Max       |
++-----------+
+```
 ```sql
-SELECT
-    C.NAME AS CUSTOMERS
-FROM
-    CUSTOMERS C
-LEFT JOIN
-    ORDERS O ON C.ID = O.CUSTOMERID
-WHERE
-    O.ID IS NULL;
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS CUSTOMERS;
+DROP TABLE IF EXISTS ORDERS;
+GO
+
+CREATE TABLE CUSTOMERS (
+  ID INT,
+  NAME VARCHAR(50)
+);
+
+CREATE TABLE ORDERS (
+  ID INT,
+  CUSTOMERID INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO CUSTOMERS VALUES
+(1,'Joe'),
+(2,'Henry'),
+(3,'Sam'),
+(4,'Max');
+
+INSERT INTO ORDERS VALUES
+(1,3),
+(2,1);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM CUSTOMERS;
+SELECT * FROM ORDERS;
+GO
+/*******************************************************************************
+4. SOLUTION
+*******************************************************************************/
+SELECT NAME
+FROM CUSTOMERS C 
+LEFT JOIN ORDERS O ON C.ID = O.CUSTOMERID
+WHERE O.CUSTOMERID IS  NULL
 ```
 
 # [1853. Convert Date Format](https://leetcode.com/problems/convert-date-format/)
