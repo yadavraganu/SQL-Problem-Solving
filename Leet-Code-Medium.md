@@ -4987,7 +4987,90 @@ FROM USER_PERMISSIONS;
 ```
 
 # [3220. Odd and Even Transactions](https://leetcode.com/problems/odd-and-even-transactions/)
+```
+Table: transactions
++------------------+------+
+| Column Name      | Type | 
++------------------+------+
+| transaction_id   | int  |
+| amount           | int  |
+| transaction_date | date |
++------------------+------+
+The transactions_id column uniquely identifies each row in this table.
+Each row of this table contains the transaction id, amount and transaction date.
+Write a solution to find the sum of amounts for odd and even transactions for each day. If there are no odd or even transactions for a specific date, display as 0.
+
+Return the result table ordered by transaction_date in ascending order.
+The result format is in the following example.
+
+Example:
+
+Input:
+transactions table:
++----------------+--------+------------------+
+| transaction_id | amount | transaction_date |
++----------------+--------+------------------+
+| 1              | 150    | 2024-07-01       |
+| 2              | 200    | 2024-07-01       |
+| 3              | 75     | 2024-07-01       |
+| 4              | 300    | 2024-07-02       |
+| 5              | 50     | 2024-07-02       |
+| 6              | 120    | 2024-07-03       |
++----------------+--------+------------------+
+Output:
++------------------+---------+----------+
+| transaction_date | odd_sum | even_sum |
++------------------+---------+----------+
+| 2024-07-01       | 75      | 350      |
+| 2024-07-02       | 0       | 350      |
+| 2024-07-03       | 0       | 120      |
++------------------+---------+----------+
+Explanation:
+
+For transaction dates:
+2024-07-01:
+Sum of amounts for odd transactions: 75
+Sum of amounts for even transactions: 150 + 200 = 350
+2024-07-02:
+Sum of amounts for odd transactions: 0
+Sum of amounts for even transactions: 300 + 50 = 350
+2024-07-03:
+Sum of amounts for odd transactions: 0
+Sum of amounts for even transactions: 120
+Note: The output table is ordered by transaction_date in ascending order.
+```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS TRANSACTIONS;
+GO
+
+CREATE TABLE TRANSACTIONS (
+  TRANSACTION_ID INT,
+  AMOUNT INT,
+  TRANSACTION_DATE DATE
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO TRANSACTIONS VALUES
+(1,150,'2024-07-01'),
+(2,200,'2024-07-01'),
+(3,75,'2024-07-01'),
+(4,300,'2024-07-02'),
+(5,50,'2024-07-02'),
+(6,120,'2024-07-03');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM TRANSACTIONS;
+GO
+/*******************************************************************************
+4. SOLUTION
+*******************************************************************************/
 SELECT
     TRANSACTION_DATE,
     SUM(CASE WHEN AMOUNT % 2 = 1 THEN AMOUNT ELSE 0 END) AS ODD_SUM,
