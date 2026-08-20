@@ -3556,25 +3556,65 @@ Explanation:
 - Bus 3 arrives at time 7 and collects passengers 12, 13, and 14.
 ```
 ```sql
-SELECT
-    B.BUS_ID,
-    -- CALCULATE PASSENGERS ON THE CURRENT BUS
-    -- BY SUBTRACTING THE CUMULATIVE COUNT OF THE PREVIOUS BUS
-    -- FROM THE CUMULATIVE COUNT OF THE CURRENT BUS.
-    -- THE ISNULL HANDLES THE FIRST BUS, SETTING THE LAG RESULT TO 0.
-    COUNT(P.PASSENGER_ID) - ISNULL(LAG(COUNT(P.PASSENGER_ID), 1, 0) OVER (
-        ORDER BY
-            B.ARRIVAL_TIME
-    ), 0) AS PASSENGERS_CNT
-FROM
-    BUSES AS B
-    -- JOIN EACH BUS WITH ALL PASSENGERS WHO HAVE ARRIVED UP TO THAT BUS'S ARRIVAL TIME.
-    LEFT JOIN PASSENGERS AS P ON P.ARRIVAL_TIME <= B.ARRIVAL_TIME
-GROUP BY
-    B.BUS_ID,
-    B.ARRIVAL_TIME
-ORDER BY
-    B.BUS_ID;
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS BUSES;
+DROP TABLE IF EXISTS PASSENGERS;
+GO
+
+CREATE TABLE BUSES (
+  BUS_ID INT,
+  ARRIVAL_TIME INT
+);
+
+CREATE TABLE PASSENGERS (
+  PASSENGER_ID INT,
+  ARRIVAL_TIME INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO BUSES VALUES
+(1,2),
+(2,4),
+(3,7);
+
+INSERT INTO PASSENGERS VALUES
+(11,1),
+(12,5),
+(13,6),
+(14,7);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM BUSES;
+SELECT * FROM PASSENGERS;
+GO
+/*******************************************************************************
+4. SOLUTION
+*******************************************************************************/
+-- Step 1: Build a CTE that calculates the cumulative number of passengers
+-- who could potentially catch each bus (i.e., those arriving before or at the bus time).
+WITH POSSIBLE_PAX_IN_BUS AS (
+    SELECT 
+        B.BUS_ID,
+        COUNT(P.PASSENGER_ID) AS POSSIBLE_PAX
+    FROM BUSES AS B
+    LEFT JOIN PASSENGERS AS P 
+        ON P.ARRIVAL_TIME <= B.ARRIVAL_TIME
+    GROUP BY B.BUS_ID
+)
+-- Step 2: From the cumulative counts, subtract the previous bus’s count
+-- to get the number of passengers boarding each bus specifically.
+SELECT 
+    BUS_ID,
+    POSSIBLE_PAX 
+        - LAG(POSSIBLE_PAX, 1, 0) OVER (ORDER BY BUS_ID ASC) AS PASSENGERS_COUNT
+FROM POSSIBLE_PAX_IN_BUS
+ORDER BY BUS_ID;
 ```
 
 # [2159. Order Two Columns Independently](https://leetcode.com/problems/order-two-columns-independently/)
