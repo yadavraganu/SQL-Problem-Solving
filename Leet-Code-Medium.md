@@ -3657,28 +3657,57 @@ Output:
 +-----------+------------+
 ```
 ```sql
-WITH
-    S AS (
-        SELECT
-            FIRST_COL,
-            ROW_NUMBER() OVER (ORDER BY FIRST_COL) AS RK
-        FROM
-            DATA
-    ),
-    T AS (
-        SELECT
-            SECOND_COL,
-            ROW_NUMBER() OVER (ORDER BY SECOND_COL DESC) AS RK
-        FROM
-            DATA
-    )
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS DATA;
+GO
+
+CREATE TABLE DATA (
+    FIRST_COL INT,
+    SECOND_COL INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO DATA VALUES
+(4,2),
+(2,3),
+(3,1),
+(1,4);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM DATA;
+GO
+/*******************************************************************************
+4. SOLUTION
+*******************************************************************************/
+-- Step 1: Assign row numbers to FIRST_COL values in ascending order.
+WITH S AS (
+    SELECT
+        FIRST_COL,
+        ROW_NUMBER() OVER (ORDER BY FIRST_COL ASC) AS RK
+    FROM DATA
+),
+-- Step 2: Assign row numbers to SECOND_COL values in descending order.
+T AS (
+    SELECT
+        SECOND_COL,
+        ROW_NUMBER() OVER (ORDER BY SECOND_COL DESC) AS RK
+    FROM DATA
+)
+-- Step 3: Match rows from S and T based on their row numbers.
+-- This pairs the smallest FIRST_COL with the largest SECOND_COL, and so on.
 SELECT
     S.FIRST_COL,
     T.SECOND_COL
-FROM
-    S
-JOIN
-    T ON S.RK = T.RK;
+FROM S
+JOIN T 
+    ON S.RK = T.RK
+ORDER BY S.FIRST_COL;
 ```
 
 # [2175. The Change in Global Rankings](https://leetcode.com/problems/the-change-in-global-rankings/)
