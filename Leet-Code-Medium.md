@@ -3249,6 +3249,53 @@ Explanation: Users 4 and 9 did not stream in 2021.
 User 11 did not subscribe in 2021.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS SUBSCRIPTIONS;
+DROP TABLE IF EXISTS STREAMS;
+GO
+CREATE TABLE SUBSCRIPTIONS (
+    ACCOUNT_ID INT,
+    START_DATE DATE,
+    END_DATE DATE
+);
+CREATE TABLE STREAMS (
+    SESSION_ID INT,
+    ACCOUNT_ID INT,
+    STREAM_DATE DATE
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+-- Subscriptions data
+INSERT INTO SUBSCRIPTIONS VALUES
+(9,  '2020-02-18', '2021-10-30'),
+(3,  '2021-09-21', '2021-11-13'),
+(11, '2020-02-28', '2020-08-18'),
+(13, '2021-04-20', '2021-09-22'),
+(4,  '2020-10-26', '2021-05-08'),
+(5,  '2020-09-11', '2021-01-17');
+
+-- Streams data
+INSERT INTO STREAMS VALUES
+(14, 9,  '2020-05-16'),
+(16, 3,  '2021-10-27'),
+(18, 11, '2020-04-29'),
+(17, 13, '2021-08-08'),
+(19, 4,  '2020-12-31'),
+(13, 5,  '2021-01-05');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM SUBSCRIPTIONS;
+SELECT * FROM STREAMS;
+GO
+/*******************************************************************************
+4. FIND STREAMS DURING ACTIVE SUBSCRIPTIONS
+*******************************************************************************/
 SELECT COUNT(DISTINCT SUB.ACCOUNT_ID) AS ACCOUNTS_COUNT
 FROM
     SUBSCRIPTIONS AS SUB
@@ -3256,7 +3303,7 @@ FROM
 WHERE
     YEAR(START_DATE) <= 2021
     AND YEAR(END_DATE) >= 2021
-    AND (YEAR(STREAM_DATE) != 2021 OR STREAM_DATE > END_DATE);
+    AND (YEAR(STREAM_DATE) != 2021);
 ```
 
 # [2041. Accepted Candidates From the Interviews](https://leetcode.com/problems/accepted-candidates-from-the-interviews/)
