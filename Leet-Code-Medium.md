@@ -1523,7 +1523,7 @@ A competition is held between females team and males team.
 Each row of this table indicates that a player_name and with gender has scored score_point in someday.
 Gender is 'F' if the player is in females team and 'M' if the player is in males team.
  
-Write an SQL query to find the total score for each gender at each day.Educational Resources
+Write an SQL query to find the total score for each gender at each day.
 Order the result table by gender and day
 The query result format is in the following example:
 
@@ -1570,13 +1570,44 @@ Fourth day is 2019-12-31, Joe scored 3 points and the total score for the team i
 Fifth day is 2020-01-07, Bajrang scored 7 points and the total score for the team is 36.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS SCORES;
+GO
+
+CREATE TABLE SCORES (
+    PLAYER_NAME   VARCHAR(50),
+    GENDER        CHAR(1),
+    DAY           DATE,
+    SCORE_POINTS  INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO SCORES VALUES
+('Aron',     'F', '2020-01-01', 17),
+('Alice',    'F', '2020-01-07', 23),
+('Bajrang',  'M', '2020-01-07', 7),
+('Khali',    'M', '2019-12-25', 11),
+('Slaman',   'M', '2019-12-30', 13),
+('Joe',      'M', '2019-12-31', 3),
+('Jose',     'M', '2019-12-18', 2),
+('Priya',    'F', '2019-12-31', 23),
+('Priyanka', 'F', '2019-12-30', 17);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM SCORES
+/*******************************************************************************
+4. SOLUTION
+*******************************************************************************/
 SELECT
     GENDER,
     DAY,
-    SUM(SCORE_POINTS) OVER(
-        PARTITION BY GENDER
-        ORDER BY DAY
-    ) AS TOTAL
+    SUM(SCORE_POINTS) OVER(PARTITION BY GENDER ORDER BY DAY) AS TOTAL
 FROM SCORES
 ORDER BY 1, 2;
 ```
