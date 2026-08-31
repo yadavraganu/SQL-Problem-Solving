@@ -4688,30 +4688,95 @@ ORDER BY
 ```
 
 # [3050. Pizza Toppings Cost Analysis](https://leetcode.com/problems/pizza-toppings-cost-analysis/)
+```
+Table: Toppings
++--------------+---------+ 
+| Column Name  | Type    | 
++--------------+---------+ 
+| topping_name | varchar | 
+| cost         | decimal |
++--------------+---------+
+topping_name is the primary key for this table.
+Each row of this table contains topping name and the cost of the topping. 
+Write a solution to calculate the total cost of all possible 3-topping pizza combinations from a  
+given list of toppings. The total cost of toppings must be rounded to 2 decimal places.
+
+Note:
+Do not include the pizzas where a topping is repeated. For example, ‘Pepperoni, Pepperoni, Onion Pizza’.
+Toppings must be listed in alphabetical order. For example, 'Chicken, Onions, Sausage'. 'Onion, Sausage,  
+Chicken' is not acceptable.
+
+Return the result table ordered by total cost in descending order and combination of toppings in  
+ascending order.
+
+The result format is in the following example.
+Example 1:
+Input: 
+Toppings table:
++--------------+------+
+| topping_name | cost |
++--------------+------+
+| Pepperoni    | 0.50 |
+| Sausage      | 0.70 |
+| Chicken      | 0.55 |
+| Extra Cheese | 0.40 |
++--------------+------+
+Output: 
++--------------------------------+------------+
+| pizza                          | total_cost | 
++--------------------------------+------------+
+| Chicken,Pepperoni,Sausage      | 1.75       |  
+| Chicken,Extra Cheese,Sausage   | 1.65       |
+| Extra Cheese,Pepperoni,Sausage | 1.60       |
+| Chicken,Extra Cheese,Pepperoni | 1.45       | 
++--------------------------------+------------+
+Explanation: 
+There are only four different combinations possible with the three topings:
+- Chicken, Pepperoni, Sausage: Total cost is $1.75 (Chicken $0.55, Pepperoni $0.50, Sausage $0.70).
+- Chicken, Extra Cheese, Sausage: Total cost is $1.65 (Chicken $0.55, Extra Cheese $0.40, Sausage $0.70).
+- Extra Cheese, Pepperoni, Sausage: Total cost is $1.60 (Extra Cheese $0.40, Pepperoni $0.50, Sausage $0.70).
+- Chicken, Extra Cheese, Pepperoni: Total cost is $1.45 (Chicken $0.55, Extra Cheese $0.40, Pepperoni $0.50).
+Output table is ordered by the total cost in descending order.
+```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS TOPPINGS;
+GO
+CREATE TABLE TOPPINGS (
+    TOPPING_NAME VARCHAR(50),
+    COST DECIMAL(4,2)
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO TOPPINGS VALUES
+('Pepperoni',    0.50),
+('Sausage',      0.70),
+('Chicken',      0.55),
+('Extra Cheese', 0.40);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM TOPPINGS;
+GO
+/*******************************************************************************
+4. ANALYSIS AND AGGREGATIONS
+*******************************************************************************/
 WITH T AS (
-    -- Ranks each topping alphabetically. The rank is used to ensure unique combinations.
-    SELECT
-        *,
-        RANK() OVER (ORDER BY TOPPING_NAME) AS RK
-    FROM
-        TOPPINGS
+    SELECT *, RANK() OVER (ORDER BY TOPPING_NAME) AS RK
+    FROM TOPPINGS
 )
 SELECT
-    -- Concatenates the names of the three toppings to form a pizza name.
     CONCAT(T1.TOPPING_NAME, ',', T2.TOPPING_NAME, ',', T3.TOPPING_NAME) AS PIZZA,
-    -- Sums the costs of the three toppings.
     T1.COST + T2.COST + T3.COST AS TOTAL_COST
-FROM
-    T AS T1
-    JOIN T AS T2
-        ON T1.RK < T2.RK -- Ensures T2's topping comes after T1's to avoid duplicates
-    JOIN T AS T3
-        ON T2.RK < T3.RK -- Ensures T3's topping comes after T2's
-ORDER BY
-    -- Orders by total cost descending (most expensive first) and then by pizza name ascending for ties.
-    TOTAL_COST DESC,
-    PIZZA ASC;
+FROM T AS T1
+JOIN T AS T2 ON T1.RK < T2.RK -- Ensures T2's topping comes after T1's to avoid duplicates
+JOIN T AS T3 ON T2.RK < T3.RK -- Ensures T3's topping comes after T2's
+ORDER BY TOTAL_COST DESC, PIZZA ASC;
 ```
 
 # [3054. Binary Tree Nodes](https://leetcode.com/problems/binary-tree-nodes/)
