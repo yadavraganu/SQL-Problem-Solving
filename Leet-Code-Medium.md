@@ -5855,7 +5855,6 @@ CREATE TABLE EMPLOYEESHIFTS (
     END_TIME    TIME
 );
 GO
-
 /*******************************************************************************
 2. DATA ENTRY: INSERT SAMPLE DATA
 *******************************************************************************/
@@ -5871,7 +5870,6 @@ INSERT INTO EMPLOYEESHIFTS VALUES
 (4, '08:00:00', '10:00:00'),
 (4, '09:00:00', '11:00:00');
 GO
-
 /*******************************************************************************
 3. DISPLAY INPUT DATA
 *******************************************************************************/
@@ -5896,7 +5894,6 @@ HAVING
 ORDER BY
     T1.EMPLOYEE_ID;
 ```
-
 # [3278. Find Candidates for Data Scientist Position II](https://leetcode.com/problems/find-candidates-for-data-scientist-position-ii/)
 ```sql
 WITH PROJECTSKILLS AS (
