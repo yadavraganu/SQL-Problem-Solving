@@ -5624,74 +5624,131 @@ ORDER BY HIERARCHY_LEVEL, EMPLOYEE_NAME;
 ```
 
 # [3268. Find Overlapping Shifts II](https://leetcode.com/problems/find-overlapping-shifts-ii/)
-```sql
--- STEP 1: COLLECT ALL UNIQUE TIME POINTS (START AND END TIMES)
-WITH T AS (
-    SELECT DISTINCT EMPLOYEE_ID, START_TIME AS ST
-    FROM EMPLOYEESHIFTS
-    UNION
-    SELECT DISTINCT EMPLOYEE_ID, END_TIME AS ST
-    FROM EMPLOYEESHIFTS
-),
-
--- STEP 2: CREATE TIME INTERVALS BETWEEN EACH TIME POINT
-P AS (
-    SELECT
-        EMPLOYEE_ID,
-        ST,
-        LEAD(ST) OVER (
-            PARTITION BY EMPLOYEE_ID
-            ORDER BY ST
-        ) AS ED
-    FROM T
-),
-
--- STEP 3: COUNT HOW MANY SHIFTS OVERLAP EACH TIME INTERVAL
-S AS (
-    SELECT
-        P.EMPLOYEE_ID,
-        P.ST,
-        P.ED,
-        COUNT(*) AS CONCURRENT_COUNT
-    FROM P
-    INNER JOIN EMPLOYEESHIFTS E ON P.EMPLOYEE_ID = E.EMPLOYEE_ID
-    WHERE P.ST >= E.START_TIME AND P.ED <= E.END_TIME
-    GROUP BY P.EMPLOYEE_ID, P.ST, P.ED
-),
-
--- STEP 4: CALCULATE TOTAL OVERLAPPING DURATION BETWEEN SHIFTS
-U AS (
-    SELECT
-        T1.EMPLOYEE_ID,
-        SUM(
-            DATEDIFF(
-                MINUTE,
-                T2.START_TIME,
-                CASE
-                    WHEN T1.END_TIME < T2.END_TIME THEN T1.END_TIME
-                    ELSE T2.END_TIME
-                END
-            )
-        ) AS TOTAL_OVERLAP_DURATION
-    FROM EMPLOYEESHIFTS T1
-    JOIN EMPLOYEESHIFTS T2
-        ON T1.EMPLOYEE_ID = T2.EMPLOYEE_ID
-        AND T1.START_TIME < T2.START_TIME
-        AND T1.END_TIME > T2.START_TIME
-    GROUP BY T1.EMPLOYEE_ID
-)
-
--- STEP 5: FINAL OUTPUT - MAX OVERLAPPING SHIFTS AND AVERAGE OVERLAP DURATION
-SELECT
-    S.EMPLOYEE_ID,
-    MAX(S.CONCURRENT_COUNT) AS MAX_OVERLAPPING_SHIFTS,
-    ISNULL(AVG(U.TOTAL_OVERLAP_DURATION), 0) AS TOTAL_OVERLAP_DURATION
-FROM S
-LEFT JOIN U ON S.EMPLOYEE_ID = U.EMPLOYEE_ID
-GROUP BY S.EMPLOYEE_ID
-ORDER BY S.EMPLOYEE_ID;
 ```
+Table: EmployeeShifts
++------------------+----------+
+| Column Name      | Type     |
++------------------+----------+
+| employee_id      | int      |
+| start_time       | datetime |
+| end_time         | datetime |
++------------------+----------+
+(employee_id, start_time) is the unique key for this table.
+This table contains information about the shifts worked by employees, including the start time, and end time.
 
+Write a solution to analyze overlapping shifts for each employee. Two shifts are considered overlapping  
+if they occur on the same date and one shift's end_time is later than another shift's start_time.
+
+For each employee, calculate the following:
+The maximum number of shifts that overlap at any given time.
+The total duration of all overlaps in minutes.
+Return the result table ordered by employee_id in ascending order.
+
+The query result format is in the following example.
+
+Example:
+
+Input:
+EmployeeShifts table:
++-------------+---------------------+---------------------+
+| employee_id | start_time          | end_time            |
++-------------+---------------------+---------------------+
+| 1           | 2023-10-01 09:00:00 | 2023-10-01 17:00:00 |
+| 1           | 2023-10-01 15:00:00 | 2023-10-01 23:00:00 |
+| 1           | 2023-10-01 16:00:00 | 2023-10-02 00:00:00 |
+| 2           | 2023-10-01 09:00:00 | 2023-10-01 17:00:00 |
+| 2           | 2023-10-01 11:00:00 | 2023-10-01 19:00:00 |
+| 3           | 2023-10-01 09:00:00 | 2023-10-01 17:00:00 |
++-------------+---------------------+---------------------+
+Output:
++-------------+---------------------------+------------------------+
+| EMPLOYEE_ID | MAX_OVERLAPPING_SHIFTS    | TOTAL_OVERLAP_DURATION |
++-------------+---------------------------+------------------------+
+| 1           | 3                         | 600                    |
+| 2           | 2                         | 360                    |
+| 3           | 1                         | 0                      |
++-------------+---------------------------+------------------------+
+
+Explanation:
+
+Employee 1 has 3 shifts:
+2023-10-01 09:00:00 to 2023-10-01 17:00:00
+2023-10-01 15:00:00 to 2023-10-01 23:00:00
+2023-10-01 16:00:00 to 2023-10-02 00:00:00
+The maximum number of overlapping shifts is 3 (from 16:00 to 17:00).  
+The total overlap duration is: 
+- 2 hours (15:00-17:00) between 1st and 2nd shifts 
+- 1 hour (16:00-17:00) between 1st and 3rd shifts 
+- 7 hours (16:00-23:00) between 2nd and 3rd shifts 
+Total: 10 hours = 600 minutes
+
+Employee 2 has 2 shifts:
+2023-10-01 09:00:00 to 2023-10-01 17:00:00
+2023-10-01 11:00:00 to 2023-10-01 19:00:00
+The maximum number of overlapping shifts is 2. The total overlap duration is 6 hours (11:00-17:00) = 360 minutes.
+Employee 3 has only 1 shift, so there are no overlaps.
+The output table contains the employee_id, the maximum number of simultaneous overlaps, and the total 
+ overlap duration in minutes for each employee, ordered by employee_id in ascending order.
+```
+```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS EMPLOYEE_SHIFTS;
+CREATE TABLE EMPLOYEE_SHIFTS (
+    EMPLOYEE_ID INT,
+    START_TIME  DATETIME,
+    END_TIME    DATETIME
+);
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO EMPLOYEE_SHIFTS VALUES
+(1, '2023-10-01 09:00:00', '2023-10-01 17:00:00'),
+(1, '2023-10-01 15:00:00', '2023-10-01 23:00:00'),
+(1, '2023-10-01 16:00:00', '2023-10-02 00:00:00'),
+(2, '2023-10-01 09:00:00', '2023-10-01 17:00:00'),
+(2, '2023-10-01 11:00:00', '2023-10-01 19:00:00'),
+(3, '2023-10-01 09:00:00', '2023-10-01 17:00:00');
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM EMPLOYEE_SHIFTS;
+/*******************************************************************************
+4. MERGE OVERLAPPING SHIFTS
+*******************************************************************************/
+WITH 
+  PRE_DATA AS (
+    SELECT 
+      ES1.EMPLOYEE_ID, 
+      ES1.START_TIME, 
+      ES1.END_TIME, 
+      COUNT(*) AS OVERLAPPING_SHIFTS, 
+      SUM(
+        CASE WHEN ES1.START_TIME <> ES2.START_TIME THEN DATEDIFF(
+          MINUTE, ES1.START_TIME, ES2.END_TIME
+        ) ELSE 0 END
+      ) AS OVERLAP_DURATION 
+    FROM 
+      EMPLOYEE_SHIFTS ES1 
+      LEFT JOIN EMPLOYEE_SHIFTS ES2 ON ES1.START_TIME BETWEEN ES2.START_TIME 
+      AND ES2.END_TIME 
+      AND ES1.EMPLOYEE_ID = ES2.EMPLOYEE_ID 
+    GROUP BY 
+      ES1.EMPLOYEE_ID, 
+      ES1.START_TIME, 
+      ES1.END_TIME
+  ) 
+SELECT 
+  EMPLOYEE_ID, 
+  MAX(OVERLAPPING_SHIFTS) AS MAX_OVERLAPPING_SHIFTS, 
+  SUM(OVERLAP_DURATION) AS TOTAL_OVERLAP_DURATION 
+FROM 
+  PRE_DATA 
+GROUP BY 
+  EMPLOYEE_ID
+ORDER BY EMPLOYEE_ID
+```
 # [3368. First Letter Capitalization](https://leetcode.com/problems/first-letter-capitalization/)
 ```
 Table: user_content
