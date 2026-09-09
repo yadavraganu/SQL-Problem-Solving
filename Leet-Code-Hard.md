@@ -2724,39 +2724,123 @@ WHERE EXPERIENCE = 'JUNIOR'
 ```
 
 # [2010. The Number of Seniors and Juniors to Join the Company II](https://leetcode.com/problems/the-number-of-seniors-and-juniors-to-join-the-company-ii/)
+```
+Table: Candidates
++-------------+------+
+| Column Name | Type |
++-------------+------+
+| employee_id | int  |
+| experience  | enum |
+| salary      | int  |
++-------------+------+
+employee_id is the column with unique values for this table.
+experience is an ENUM (category) of types ('Senior', 'Junior').
+Each row of this table indicates the id of a candidate, their monthly salary, and their experience.
+The salary of each candidate is guaranteed to be unique.
+ 
+A company wants to hire new employees. The budget of the company for the salaries is $70000.  
+The company's criteria for hiring are:
+
+Keep hiring the senior with the smallest salary until you cannot hire any more seniors.
+Use the remaining budget to hire the junior with the smallest salary.
+Keep hiring the junior with the smallest salary until you cannot hire any more juniors.
+Write a solution to find the ids of seniors and juniors hired under the mentioned criteria.
+
+Return the result table in any order.
+
+The result format is in the following example.
+
+Example 1:
+
+Input:
+Candidates table:
++-------------+------------+--------+
+| employee_id | experience | salary |
++-------------+------------+--------+
+| 1           | Junior     | 10000  |
+| 9           | Junior     | 15000  |
+| 2           | Senior     | 20000  |
+| 11          | Senior     | 16000  |
+| 13          | Senior     | 50000  |
+| 4           | Junior     | 40000  |
++-------------+------------+--------+
+Output: 
++-------------+
+| employee_id |
++-------------+
+| 11          |
+| 2           |
+| 1           |
+| 9           |
++-------------+
+Explanation: 
+We can hire 2 seniors with IDs (11, 2). Since the budget is $70000 and the sum of their salaries  
+is $36000, we still have $34000 but they are not enough to hire the senior candidate with ID 13.
+We can hire 2 juniors with IDs (1, 9). Since the remaining budget is $34000 and the sum of their  
+salaries is $25000, we still have $9000 but they are not enough to hire the junior candidate with ID 4.
+```
 ```sql
-WITH ACCUMULATEDCANDIDATES AS (
-  SELECT
-    EMPLOYEE_ID,
-    EXPERIENCE,
-    ROW_NUMBER() OVER (
-      PARTITION BY EXPERIENCE
-      ORDER BY SALARY, EMPLOYEE_ID
-    ) AS CANDIDATE_COUNT, -- Rank candidates by salary within experience
-    SUM(SALARY) OVER (
-      PARTITION BY EXPERIENCE
-      ORDER BY SALARY, EMPLOYEE_ID
-    ) AS ACCUMULATED_SALARY -- Running total of salary
-  FROM CANDIDATES
-),
-HIREDSENIORS AS (
-  SELECT
-    EMPLOYEE_ID,
-    ACCUMULATED_SALARY
-  FROM ACCUMULATEDCANDIDATES
-  WHERE EXPERIENCE = 'Senior' AND ACCUMULATED_SALARY < 70000
-)
-SELECT EMPLOYEE_ID
-FROM HIREDSENIORS
-UNION ALL
-SELECT EMPLOYEE_ID
-FROM ACCUMULATEDCANDIDATES AS JUNIORS
-WHERE EXPERIENCE = 'Junior'
-  AND JUNIORS.ACCUMULATED_SALARY < (
-    SELECT 70000 - ISNULL(MAX(ACCUMULATED_SALARY), 0)
-    FROM ACCUMULATEDCANDIDATES
-    WHERE EXPERIENCE = 'SENIOR' AND ACCUMULATED_SALARY < 70000
-  ); -- Hire juniors within remaining budget
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS CANDIDATES;
+GO
+
+CREATE TABLE CANDIDATES (
+    EMPLOYEE_ID INT,
+    EXPERIENCE  VARCHAR(20),
+    SALARY      INT
+);
+GO
+
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO CANDIDATES VALUES
+(1,  'Junior', 10000),
+(9,  'Junior', 15000),
+(2,  'Senior', 20000),
+(11, 'Senior', 16000),
+(13, 'Senior', 50000),
+(4,  'Junior', 40000);
+GO
+
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM CANDIDATES ORDER BY EXPERIENCE, SALARY;
+GO
+
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
+WITH 
+  ACCUMULATEDCANDIDATES AS (
+    SELECT 
+      EMPLOYEE_ID, 
+      EXPERIENCE, 
+      ROW_NUMBER() OVER (PARTITION BY EXPERIENCE ORDER BY SALARY, EMPLOYEE_ID) AS CANDIDATE_COUNT, 
+      -- Rank candidates by salary within experience
+      SUM(SALARY) OVER (PARTITION BY EXPERIENCE ORDER BY SALARY, EMPLOYEE_ID) AS ACCUMULATED_SALARY 
+      -- Running total of salary
+    FROM CANDIDATES
+  ), 
+  HIREDSENIORS AS (
+    SELECT 
+      EMPLOYEE_ID, 
+      ACCUMULATED_SALARY 
+    FROM ACCUMULATEDCANDIDATES 
+    WHERE EXPERIENCE = 'Senior' AND ACCUMULATED_SALARY < 70000
+  ) 
+
+SELECT EMPLOYEE_ID FROM HIREDSENIORS 
+UNION ALL 
+SELECT EMPLOYEE_ID FROM ACCUMULATEDCANDIDATES AS JUNIORS 
+WHERE EXPERIENCE = 'Junior' AND JUNIORS.ACCUMULATED_SALARY < (
+    SELECT 
+      70000 - ISNULL(MAX(ACCUMULATED_SALARY), 0) 
+    FROM ACCUMULATEDCANDIDATES WHERE EXPERIENCE = 'Senior' AND ACCUMULATED_SALARY < 70000
+  );
 ```
 
 # [2118. Build the Equation](https://leetcode.com/problems/build-the-equation/)
