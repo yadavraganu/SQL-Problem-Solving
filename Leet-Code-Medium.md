@@ -2412,31 +2412,130 @@ ORDER BY SALE_DATE ASC
 ```
 
 # [1454. Active Users](https://leetcode.com/problems/active-users/)
-```sql
-WITH RANKCTE AS (
-    SELECT
-    ID, LOGIN_DATE,
-    RANK() OVER (PARTITION BY ID ORDER BY LOGIN_DATE) AS RK
-    FROM (SELECT DISTINCT ID, CONVERT(DATE, LOGIN_DATE) AS LOGIN_DATE FROM LOGINS) L
-),
-GROUPINGCTE AS (
-    SELECT *,
-    DATEADD(DAY, -RK, LOGIN_DATE) AS GRP_DATE
-    FROM RANKCTE
-),
-FINALIDS AS (
-    SELECT ID 
-    FROM GROUPINGCTE
-    GROUP BY ID, GRP_DATE
-    HAVING COUNT(*)>=5
-)
-SELECT F.ID, A.NAME
-FROM FINALIDS F
-JOIN ACCOUNTS A 
-ON F.ID = A.ID
-ORDER BY F.ID;
 ```
+Table Accounts:
++---------------+---------+
+| Column Name   | Type    |
++---------------+---------+
+| id            | int     |
+| name          | varchar |
++---------------+---------+
+the id is the primary key for this table.
+This table contains the account id and the user name of each account.
+ 
+Table Logins:
++---------------+---------+
+| Column Name   | Type    |
++---------------+---------+
+| id            | int     |
+| login_date    | date    |
++---------------+---------+
+There is no primary key for this table, it may contain duplicates.
+This table contains the account id of the user who logged in and the login date.  
+A user may log in multiple times in the day.
+ 
+Write an SQL query to find the id and the name of active users.
 
+Active users are those who logged in to their accounts for 5 or more consecutive days.
+
+Return the result table ordered by the id.
+
+The query result format is in the following example:
+Accounts table:
++----+----------+
+| id | name     |
++----+----------+
+| 1  | Winston  |
+| 7  | Jonathan |
++----+----------+
+Logins table:
++----+------------+
+| id | login_date |
++----+------------+
+| 7  | 2020-05-30 |
+| 1  | 2020-05-30 |
+| 7  | 2020-05-31 |
+| 7  | 2020-06-01 |
+| 7  | 2020-06-02 |
+| 7  | 2020-06-02 |
+| 7  | 2020-06-03 |
+| 1  | 2020-06-07 |
+| 7  | 2020-06-10 |
++----+------------+
+Result table:
++----+----------+
+| id | name     |
++----+----------+
+| 7  | Jonathan |
++----+----------+
+User Winston with id = 1 logged in 2 times only in 2 different days, so, Winston is not an active user.
+User Jonathan with id = 7 logged in 7 times in 6 different days, five of them were consecutive days, so, Jonathan is an active user.
+```
+```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS ACCOUNTS;
+DROP TABLE IF EXISTS LOGINS;
+GO
+
+CREATE TABLE ACCOUNTS (
+    ID INT,
+    NAME VARCHAR(50)
+);
+
+CREATE TABLE LOGINS (
+    ID INT,
+    LOGIN_DATE DATE
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO ACCOUNTS VALUES
+(1, 'Winston'),
+(7, 'Jonathan');
+
+INSERT INTO LOGINS VALUES
+(7, '2020-05-30'),
+(1, '2020-05-30'),
+(7, '2020-05-31'),
+(7, '2020-06-01'),
+(7, '2020-06-02'),
+(7, '2020-06-02'),
+(7, '2020-06-03'),
+(1, '2020-06-07'),
+(7, '2020-06-10');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM ACCOUNTS;
+SELECT * FROM LOGINS ORDER BY ID, LOGIN_DATE;
+GO
+/*******************************************************************************
+4. SOLUTION
+*******************************************************************************/
+WITH 
+  GROUPED_DATE AS (
+    SELECT 
+      *, 
+      DATEADD(DAY, -1 * ROW_NUMBER() OVER(PARTITION BY ID ORDER BY LOGIN_DATE ASC), LOGIN_DATE) AS GRP 
+    FROM 
+      (
+        SELECT 
+          DISTINCT ID,LOGIN_DATE 
+        FROM LOGINS
+      ) A
+  ) 
+SELECT 
+  GD.ID 
+FROM 
+  GROUPED_DATE GD 
+  LEFT JOIN ACCOUNTS A ON A.ID = GD.ID 
+GROUP BY GD.ID, GRP 
+HAVING COUNT(*) >= 5
+```
 # [1459. Rectangles Area](https://leetcode.com/problems/rectangles-area/)
 ```sql
 SELECT
