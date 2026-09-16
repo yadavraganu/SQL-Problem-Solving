@@ -2950,27 +2950,103 @@ WHERE RNK = 2;
 ```
 
 # [177. Nth Highest Salary](https://leetcode.com/problems/nth-highest-salary/)
-```sql
-CREATE FUNCTION getNthHighestSalary(@N INT) RETURNS INT AS BEGIN RETURN (
-  SELECT 
-    MAX(SALARY) AS SALARY 
-  FROM 
-    (
-      SELECT 
-        *, 
-        DENSE_RANK() OVER(
-          ORDER BY 
-            SALARY DESC
-        ) AS RNK 
-      FROM 
-        EMPLOYEE
-    ) A 
-  WHERE 
-    RNK = @N
-);
-END
 ```
+Table: Employee
++-------------+------+
+| Column Name | Type |
++-------------+------+
+| id          | int  |
+| salary      | int  |
++-------------+------+
+id is the primary key (column with unique values) for this table.
+Each row of this table contains information about the salary of an employee.
 
+Write a solution to find the nth highest distinct salary from the Employee table.  
+If there are less than n distinct salaries, return null.
+
+The result format is in the following example.
+
+Example 1:
+
+Input: 
+Employee table:
++----+--------+
+| id | salary |
++----+--------+
+| 1  | 100    |
+| 2  | 200    |
+| 3  | 300    |
++----+--------+
+n = 2
+Output: 
++------------------------+
+| getNthHighestSalary(2) |
++------------------------+
+| 200                    |
++------------------------+
+Example 2:
+Input: 
+Employee table:
++----+--------+
+| id | salary |
++----+--------+
+| 1  | 100    |
++----+--------+
+n = 2
+Output: 
++------------------------+
+| getNthHighestSalary(2) |
++------------------------+
+| null                   |
++------------------------+
+```
+```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS EMPLOYEE;
+GO
+
+CREATE TABLE EMPLOYEE (
+    ID INT,
+    SALARY INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO EMPLOYEE VALUES
+(1, 100),
+(2, 200),
+(3, 300);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM EMPLOYEE ORDER BY ID;
+GO
+/*******************************************************************************
+4. SOLUTION
+*******************************************************************************/
+CREATE FUNCTION getNthHighestSalary(@N INT)
+RETURNS INT
+AS
+BEGIN
+    DECLARE @Result INT;
+
+    SELECT @Result = MAX(SALARY)
+    FROM (
+        SELECT 
+            SALARY, DENSE_RANK() OVER (ORDER BY SALARY DESC) AS RNK
+        FROM EMPLOYEE
+    ) AS A
+    WHERE RNK = @N;
+
+    RETURN @Result;
+END;
+GO
+SELECT dbo.getNthHighestSalary(5) AS NthHighest;
+```
 # [178. Rank Scores](https://leetcode.com/problems/rank-scores/)
 ```sql
 SELECT
