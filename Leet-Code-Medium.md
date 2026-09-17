@@ -4781,51 +4781,95 @@ GROUP BY D.DRIVER_ID
 ```
 
 # [2292. Products With Three or More Orders in Two Consecutive Years](https://leetcode.com/problems/products-with-three-or-more-orders-in-two-consecutive-years/)
-```sql
-WITH P AS (
-    SELECT 
-        PRODUCT_ID, 
-        YEAR(PURCHASE_DATE) AS Y, 
-        CASE 
-            WHEN COUNT(*) >= 3 THEN 1 
-            ELSE 0 
-        END AS MARK
-    FROM ORDERS
-    GROUP BY PRODUCT_ID, YEAR(PURCHASE_DATE)
-)
-SELECT DISTINCT P1.PRODUCT_ID
-FROM P AS P1
-JOIN P AS P2 
-    ON P1.PRODUCT_ID = P2.PRODUCT_ID 
-    AND P1.Y = P2.Y - 1
-WHERE P1.MARK = 1 AND P2.MARK = 1
-ORDER BY P1.PRODUCT_ID;
------------------
-WITH PRODUCTYEARSTATS AS (
-    SELECT 
-        PRODUCT_ID,
-        YEAR(PURCHASE_DATE) AS Y,
-        COUNT(*) AS PURCHASE_COUNT
-    FROM ORDERS
-    GROUP BY PRODUCT_ID, YEAR(PURCHASE_DATE)
-),
-WITHLAG AS (
-    SELECT 
-        PRODUCT_ID,
-        Y,
-        PURCHASE_COUNT,
-        LAG(PURCHASE_COUNT) OVER (
-            PARTITION BY PRODUCT_ID 
-            ORDER BY Y
-        ) AS PREV_YEAR_COUNT
-    FROM PRODUCTYEARSTATS
-)
-SELECT DISTINCT PRODUCT_ID
-FROM WITHLAG
-WHERE PURCHASE_COUNT >= 3 AND PREV_YEAR_COUNT >= 3
-ORDER BY PRODUCT_ID;
 ```
+Table: Orders
++---------------+------+
+| Column Name   | Type |
++---------------+------+
+| order_id      | int  |
+| product_id    | int  |
+| quantity      | int  |
+| purchase_date | date |
++---------------+------+
+order_id contains unique values.
+Each row in this table contains the ID of an order, the id of the product purchased,  
+the quantity, and the purchase date.
 
+Write a solution to report the IDs of all the products that were ordered three or  
+more times in two consecutive years.
+
+Return the result table in any order.
+The result format is shown in the following example.
+
+Example 1:
+Input: 
+Orders table:
++----------+------------+----------+---------------+
+| order_id | product_id | quantity | purchase_date |
++----------+------------+----------+---------------+
+| 1        | 1          | 7        | 2020-03-16    |
+| 2        | 1          | 4        | 2020-12-02    |
+| 3        | 1          | 7        | 2020-05-10    |
+| 4        | 1          | 6        | 2021-12-23    |
+| 5        | 1          | 5        | 2021-05-21    |
+| 6        | 1          | 6        | 2021-10-11    |
+| 7        | 2          | 6        | 2022-10-11    |
++----------+------------+----------+---------------+
+Output: 
++------------+
+| product_id |
++------------+
+| 1          |
++------------+
+Explanation: 
+Product 1 was ordered in 2020 three times and in 2021 three times. Since it was ordered three times in two consecutive years, we include it in the answer.
+Product 2 was ordered one time in 2022. We do not include it in the answer.
+```
+```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS ORDERS;
+GO
+CREATE TABLE ORDERS (
+    ORDER_ID INT,
+    PRODUCT_ID INT,
+    QUANTITY INT,
+    PURCHASE_DATE DATE
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO ORDERS VALUES
+(1, 1, 7, '2020-03-16'),
+(2, 1, 4, '2020-12-02'),
+(3, 1, 7, '2020-05-10'),
+(4, 1, 6, '2021-12-23'),
+(5, 1, 5, '2021-05-21'),
+(6, 1, 6, '2021-10-11'),
+(7, 2, 6, '2022-10-11');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM ORDERS ORDER BY PURCHASE_DATE;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
+WITH PRDCT_YRLY_PRCHS AS (
+SELECT 
+PRODUCT_ID,
+YEAR(PURCHASE_DATE) AS YEAR
+FROM ORDERS 
+GROUP BY PRODUCT_ID,YEAR(PURCHASE_DATE)
+HAVING COUNT(DISTINCT ORDER_ID) >=3
+)
+SELECT DISTINCT C.PRODUCT_ID FROM PRDCT_YRLY_PRCHS C 
+INNER JOIN PRDCT_YRLY_PRCHS N 
+ON C.PRODUCT_ID = N.PRODUCT_ID AND C.YEAR + 1 = N.YEAR
+```
 # [2298. Tasks Count in the Weekend](https://leetcode.com/problems/tasks-count-in-the-weekend/)
 ```sql
 SELECT
