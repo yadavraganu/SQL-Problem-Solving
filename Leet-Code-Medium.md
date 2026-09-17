@@ -4698,13 +4698,86 @@ ORDER BY
 ```
 
 # [2238. Number of Times a Driver Was a Passenger](https://leetcode.com/problems/number-of-times-a-driver-was-a-passenger/)
+```
+Table: Rides
++--------------+------+
+| Column Name  | Type |
++--------------+------+
+| ride_id      | int  |
+| driver_id    | int  |
+| passenger_id | int  |
++--------------+------+
+ride_id is the primary key for this table.
+Each row of this table contains the ID of the driver and the ID of the passenger that rode in ride_id.
+Note that driver_id != passenger_id.
+
+Write an SQL query to report the ID of each driver and the number of times they were a passenger.
+Return the result table in any order.
+The query result format is in the following example.
+
+Example 1:
+Input: 
+Rides table:
++---------+-----------+--------------+
+| ride_id | driver_id | passenger_id |
++---------+-----------+--------------+
+| 1       | 7         | 1            |
+| 2       | 7         | 2            |
+| 3       | 11        | 1            |
+| 4       | 11        | 7            |
+| 5       | 11        | 7            |
+| 6       | 11        | 3            |
++---------+-----------+--------------+
+Output: 
++-----------+-----+
+| driver_id | cnt |
++-----------+-----+
+| 7         | 2   |
+| 11        | 0   |
++-----------+-----+
+Explanation: 
+There are two drivers in all the given rides: 7 and 11.
+The driver with ID = 7 was a passenger two times.
+The driver with ID = 11 was never a passenger.
+```
 ```sql
-WITH T AS (SELECT DISTINCT DRIVER_ID FROM RIDES)
-SELECT T.DRIVER_ID, COUNT(PASSENGER_ID) AS CNT
-FROM
-    T AS T
-    LEFT JOIN RIDES AS R ON T.DRIVER_ID = R.PASSENGER_ID
-GROUP BY 1;
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS RIDES;
+GO
+
+CREATE TABLE RIDES (
+    RIDE_ID INT,
+    DRIVER_ID INT,
+    PASSENGER_ID INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO RIDES VALUES
+(1, 7, 1),
+(2, 7, 2),
+(3, 11, 1),
+(4, 11, 7),
+(5, 11, 7),
+(6, 11, 3);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM RIDES ORDER BY DRIVER_ID, RIDE_ID;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
+SELECT 
+D.DRIVER_ID,
+ISNULL(COUNT(DISTINCT P.RIDE_ID),0) AS CNT 
+FROM RIDES D
+LEFT JOIN RIDES P ON P.PASSENGER_ID=D.DRIVER_ID
+GROUP BY D.DRIVER_ID
 ```
 
 # [2292. Products With Three or More Orders in Two Consecutive Years](https://leetcode.com/problems/products-with-three-or-more-orders-in-two-consecutive-years/)
