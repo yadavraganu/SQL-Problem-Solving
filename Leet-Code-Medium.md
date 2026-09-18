@@ -5620,49 +5620,98 @@ GROUP BY
 ```
 
 # [3058. Friends With No Mutual Friends](https://leetcode.com/problems/friends-with-no-mutual-friends/)
+```
+Table: Friends
++-------------+------+
+| Column Name | Type |
++-------------+------+
+| user_id1    | int  |
+| user_id2    | int  |
++-------------+------+
+(user_id1, user_id2) is the primary key (combination of columns with unique values) for this table.
+Each row contains user id1, user id2, both of whom are friends with each other.
+
+Write a solution to find all pairs of users who are friends with each other and have no mutual friends.
+Return the result table ordered by user_id1, user_id2 in ascending order.
+The result format is in the following example.
+
+Example 1:
+
+Input: 
+Friends table:
++----------+----------+
+| user_id1 | user_id2 | 
++----------+----------+
+| 1        | 2        | 
+| 2        | 3        | 
+| 2        | 4        | 
+| 1        | 5        | 
+| 6        | 7        | 
+| 3        | 4        | 
+| 2        | 5        | 
+| 8        | 9        | 
++----------+----------+
+Output: 
++----------+----------+
+| user_id1 | user_id2 | 
++----------+----------+
+| 6        | 7        | 
+| 8        | 9        | 
++----------+----------+
+Explanation: 
+- Users 1 and 2 are friends with each other, but they share a mutual friend with user ID 5, so this pair is not included.
+- Users 2 and 3 are friends, they both share a mutual friend with user ID 4, resulting in exclusion, similarly for users 2 and 4 who share a mutual friend with user ID 3, hence not included.
+- Users 1 and 5 are friends with each other, but they share a mutual friend with user ID 2, so this pair is not included.
+- Users 6 and 7, as well as users 8 and 9, are friends with each other, and they don't have any mutual friends, hence included.
+- Users 3 and 4 are friends with each other, but their mutual connection with user ID 2 means they are not included, similarly for users 2 and 5 are friends but are excluded due to their mutual connection with user ID 1.
+Output table is ordered by user_id1 in ascending order.
+```
 ```sql
-WITH TWOWAYFRIENDS AS (
-    -- Creates a list of all friendships in both directions (e.g., A -> B and B -> A)
-    SELECT
-        USER_ID1 AS USER_ID,
-        USER_ID2 AS FRIEND_ID
-    FROM
-        FRIENDS
-    UNION ALL
-    SELECT
-        USER_ID2,
-        USER_ID1
-    FROM
-        FRIENDS
-),
-USERTOMUTUALFRIEND AS (
-    -- Finds all pairs of users who have at least one mutual friend by self-joining the TWOWAYFRIENDS CTE
-    SELECT
-        USER1.USER_ID,
-        USER2.USER_ID AS FRIEND_ID
-    FROM
-        TWOWAYFRIENDS AS USER1
-    JOIN
-        TWOWAYFRIENDS AS USER2
-        ON USER1.FRIEND_ID = USER2.FRIEND_ID
-    WHERE
-        USER1.USER_ID != USER2.USER_ID
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS FRIENDS;
+GO
+CREATE TABLE FRIENDS (
+    USER_ID1 INT,
+    USER_ID2 INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO FRIENDS VALUES
+(1, 2),
+(2, 3),
+(2, 4),
+(1, 5),
+(6, 7),
+(3, 4),
+(2, 5),
+(8, 9);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM FRIENDS ORDER BY USER_ID1, USER_ID2;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
+WITH ALL_FRIEND_PAIR AS (
+SELECT USER_ID1 AS USER_ID ,USER_ID2 AS FRIEND_ID FROM FRIENDS
+UNION
+SELECT USER_ID2 AS USER_ID ,USER_ID1 AS FRIEND_ID FROM FRIENDS
 )
-SELECT
-    -- Selects the original friendship pairs
-    FRIENDS.*
-FROM
-    FRIENDS
-    -- Performs a LEFT JOIN to find friendships that do not exist in the mutual friends list
-    LEFT JOIN USERTOMUTUALFRIEND
-        ON (
-            FRIENDS.USER_ID1 = USERTOMUTUALFRIEND.USER_ID
-            AND FRIENDS.USER_ID2 = USERTOMUTUALFRIEND.FRIEND_ID
-        )
--- Filters for rows where there was no match, meaning the friends have no mutual friends
-WHERE
-    USERTOMUTUALFRIEND.FRIEND_ID IS NULL
-ORDER BY 1, 2;
+,ALL_PAIR_WITH_MUTUAL_FRND AS (
+SELECT 
+F1.USER_ID AS USER_ID,
+F2.USER_ID AS FRIEND_ID
+FROM 
+ALL_FRIEND_PAIR F1 
+LEFT JOIN ALL_FRIEND_PAIR F2 ON F1.FRIEND_ID = F2.FRIEND_ID AND F1.USER_ID <> F2.USER_ID
+)
+SELECT * FROM FRIENDS EXCEPT SELECT * FROM ALL_PAIR_WITH_MUTUAL_FRND
 ```
 
 # [3087. Find Trending Hashtags](https://leetcode.com/problems/find-trending-hashtags/)
