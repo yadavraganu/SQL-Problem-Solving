@@ -8287,8 +8287,81 @@ FROM SEAT
 ORDER BY 1 ASC
 ```
 
-# [627. Swap Salary](https://leetcode.com/problems/swap-salary/)
-```sql
-UPDATE SALARY SET SEX = CASE WHEN SEX = 'm' THEN 'f' ELSE 'm' END;
+# [627. Swap Sex of Employees](https://leetcode.com/problems/swap-sex-of-employees/)
+```
+Table: Salary
++-------------+----------+
+| Column Name | Type     |
++-------------+----------+
+| id          | int      |
+| name        | varchar  |
+| sex         | ENUM     |
+| salary      | int      |
++-------------+----------+
+id is the primary key (column with unique values) for this table.
+The sex column is ENUM (category) value of type ('m', 'f').
+The table contains information about an employee.
 
+Write a solution to swap all 'f' and 'm' values (i.e., change all 'f' values to 'm' and vice versa) with a single update statement and no intermediate temporary tables.
+
+Note that you must write a single update statement, do not write any select statement for this problem.
+
+The result format is in the following example.
+
+Example 1:
+
+Input: 
+Salary table:
++----+------+-----+--------+
+| id | name | sex | salary |
++----+------+-----+--------+
+| 1  | A    | m   | 2500   |
+| 2  | B    | f   | 1500   |
+| 3  | C    | m   | 5500   |
+| 4  | D    | f   | 500    |
++----+------+-----+--------+
+Output: 
++----+------+-----+--------+
+| id | name | sex | salary |
++----+------+-----+--------+
+| 1  | A    | f   | 2500   |
+| 2  | B    | m   | 1500   |
+| 3  | C    | f   | 5500   |
+| 4  | D    | m   | 500    |
++----+------+-----+--------+
+Explanation: 
+(1, A) and (3, C) were changed from 'm' to 'f'.
+(2, B) and (4, D) were changed from 'f' to 'm'.
+```
+```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS SALARY;
+GO
+CREATE TABLE SALARY (
+    ID INT,
+    NAME VARCHAR(50),
+    SEX CHAR(1),
+    SALARY INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO SALARY VALUES
+(1, 'A', 'm', 2500),
+(2, 'B', 'f', 1500),
+(3, 'C', 'm', 5500),
+(4, 'D', 'f', 500);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM SALARY ORDER BY ID;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
+UPDATE SALARY SET SEX = CASE WHEN SEX = 'm' THEN 'f' ELSE 'm' END;
 ```
