@@ -8194,12 +8194,85 @@ JOIN point_2d p2
 ```
 
 # [614. Second Degree Follower](https://leetcode.com/problems/second-degree-follower/)
+```
+Table: Follow
++-------------+---------+
+| Column Name | Type    |
++-------------+---------+
+| followee    | varchar |
+| follower    | varchar |
++-------------+---------+
+(followee, follower) is the primary key (combination of columns with unique values) for this table.
+Each row of this table indicates that the user follower follows the user followee on a social network.
+There will not be a user following themself.
+ 
+A second-degree follower is a user who:
+- follows at least one user, and
+- is followed by at least one user.
+
+Write a solution to report the second-degree users and the number of their followers.
+
+Return the result table ordered by follower in alphabetical order.
+
+The result format is in the following example.
+
+Example 1:
+
+Input: 
+Follow table:
++----------+----------+
+| followee | follower |
++----------+----------+
+| Alice    | Bob      |
+| Bob      | Cena     |
+| Bob      | Donald   |
+| Donald   | Edward   |
++----------+----------+
+Output: 
++----------+-----+
+| follower | num |
++----------+-----+
+| Bob      | 2   |
+| Donald   | 1   |
++----------+-----+
+Explanation: 
+User Bob has 2 followers. Bob is a second-degree follower because he follows Alice, so we include him in the result table.
+User Donald has 1 follower. Donald is a second-degree follower because he follows Bob, so we include him in the result table.
+User Alice has 1 follower. Alice is not a second-degree follower because she does not follow anyone, so we don not include her in the result table.
+```
 ```sql
-SELECT F1.FOLLOWER, COUNT(DISTINCT F2.FOLLOWER) AS NUM
-FROM FOLLOW AS F1
-JOIN FOLLOW AS F2 ON F1.FOLLOWER = F2.FOLLOWEE
-GROUP BY F1.FOLLOWER
-ORDER BY F1.FOLLOWER;
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS FOLLOW;
+GO
+CREATE TABLE FOLLOW (
+    FOLLOWEE VARCHAR(50),
+    FOLLOWER VARCHAR(50)
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO FOLLOW VALUES
+('Alice', 'Bob'),
+('Bob', 'Cena'),
+('Bob', 'Donald'),
+('Donald', 'Edward');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM FOLLOW ORDER BY FOLLOWEE, FOLLOWER;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
+SELECT FE.FOLLOWEE AS FOLLOWER, COUNT(*) AS NUM
+FROM FOLLOW FE
+LEFT JOIN FOLLOW FW ON FE.FOLLOWEE = FW.FOLLOWER 
+WHERE FW.FOLLOWER IS NOT NULL
+GROUP BY FE.FOLLOWEE
 ```
 
 # [626. Exchange Seats](https://leetcode.com/problems/exchange-seats/)
