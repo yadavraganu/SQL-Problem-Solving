@@ -8018,20 +8018,86 @@ ORDER BY
 ```
 
 # [550. Game Play Analysis IV](https://leetcode.com/problems/game-play-analysis-iv/)
+```
+Table: Activity
++--------------+---------+
+| Column Name  | Type    |
++--------------+---------+
+| player_id    | int     |
+| device_id    | int     |
+| event_date   | date    |
+| games_played | int     |
++--------------+---------+
+(player_id, event_date) is the primary key (combination of columns with unique values) of this table.
+This table shows the activity of players of some games.
+Each row is a record of a player who logged in and played a number of games (possibly 0) before logging out on someday using some device.
+
+Write a solution to report the fraction of players that logged in again on the day after the day they first logged in, rounded to 2 decimal places. In other words, you need to determine the number of players who logged in on the day immediately following their initial login, and divide it by the number of total players.
+
+The result format is in the following example.
+
+Example 1:
+Input: 
+Activity table:
++-----------+-----------+------------+--------------+
+| player_id | device_id | event_date | games_played |
++-----------+-----------+------------+--------------+
+| 1         | 2         | 2016-03-01 | 5            |
+| 1         | 2         | 2016-03-02 | 6            |
+| 2         | 3         | 2017-06-25 | 1            |
+| 3         | 1         | 2016-03-02 | 0            |
+| 3         | 4         | 2018-07-03 | 5            |
++-----------+-----------+------------+--------------+
+Output: 
++-----------+
+| fraction  |
++-----------+
+| 0.33      |
++-----------+
+Explanation: 
+Only the player with id 1 logged back in after the first day he had logged in so the answer is 1/3 = 0.33
+```
 ```sql
-WITH PLAYERS AS (
-  SELECT PLAYER_ID, MIN(EVENT_DATE) AS FIRST_LOGIN
-  FROM ACTIVITY
-  GROUP BY PLAYER_ID
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS ACTIVITY;
+GO
+CREATE TABLE ACTIVITY (
+    PLAYER_ID INT,
+    DEVICE_ID INT,
+    EVENT_DATE DATE,
+    GAMES_PLAYED INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO ACTIVITY VALUES
+(1, 2, '2016-03-01', 5),
+(1, 2, '2016-03-02', 6),
+(2, 3, '2017-06-25', 1),
+(3, 1, '2016-03-02', 0),
+(3, 4, '2018-07-03', 5);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM ACTIVITY ORDER BY PLAYER_ID, EVENT_DATE;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
+WITH FIRST_LOGIN AS (
+SELECT PLAYER_ID, MIN(EVENT_DATE) AS FIRST_LOGIN  FROM
+ACTIVITY GROUP BY PLAYER_ID
 )
-SELECT ROUND(
-    CAST(COUNT(T2.PLAYER_ID) AS DECIMAL) / COUNT(T1.PLAYER_ID),
-    2
-  ) AS FRACTION
-FROM PLAYERS AS T1
-LEFT JOIN ACTIVITY AS T2
-  ON T1.PLAYER_ID = T2.PLAYER_ID
-  AND DATEDIFF(DAY, T1.FIRST_LOGIN, T2.EVENT_DATE) = 1;
+SELECT 
+ROUND(SUM(CASE WHEN A.PLAYER_ID IS NOT NULL THEN 1 ELSE 0 END) * 1.0 / COUNT(*),2) AS FRACTION 
+FROM 
+FIRST_LOGIN FL
+LEFT JOIN ACTIVITY A ON FL.PLAYER_ID = A.PLAYER_ID
+AND DATEDIFF(DAY,FIRST_LOGIN,EVENT_DATE) = 1
 ```
 
 # [570. Managers with at Least 5 Direct Reports](https://leetcode.com/problems/managers-with-at-least-5-direct-reports/)
