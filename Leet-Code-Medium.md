@@ -8047,13 +8047,118 @@ JOIN (
 ```
 
 # [574. Winning Candidate](https://leetcode.com/problems/winning-candidate/)
+```
+Table: Candidate
++-------------+----------+
+| Column Name | Type     |
++-------------+----------+
+| id          | int      |
+| name        | varchar  |
++-------------+----------+
+id is the column with unique values for this table.
+Each row of this table contains information about the id and the name of a candidate.
+ 
+Table: Vote
++-------------+------+
+| Column Name | Type |
++-------------+------+
+| id          | int  |
+| candidateId | int  |
++-------------+------+
+id is an auto-increment primary key (column with unique values).
+candidateId is a foreign key (reference column) to id from the Candidate table.
+Each row of this table determines the candidate who got the ith vote in the elections.
+ 
+
+Write a solution to report the name of the winning candidate (i.e., the candidate who got the largest number of votes).
+
+The test cases are generated so that exactly one candidate wins the elections.
+
+The result format is in the following example.
+
+Example 1:
+
+Input: 
+Candidate table:
++----+------+
+| id | name |
++----+------+
+| 1  | A    |
+| 2  | B    |
+| 3  | C    |
+| 4  | D    |
+| 5  | E    |
++----+------+
+Vote table:
++----+-------------+
+| id | candidateId |
++----+-------------+
+| 1  | 2           |
+| 2  | 4           |
+| 3  | 3           |
+| 4  | 2           |
+| 5  | 5           |
++----+-------------+
+Output: 
++------+
+| name |
++------+
+| B    |
++------+
+Explanation: 
+Candidate B has 2 votes. Candidates C, D, and E have 1 vote each.
+The winner is candidate B.
+```
 ```sql
-SELECT C.NAME
-FROM CANDIDATE AS C
-LEFT JOIN VOTE AS V ON C.ID = V.CANDIDATEID
-GROUP BY C.ID, C.NAME
-ORDER BY COUNT(V.CANDIDATEID) DESC
-OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS CANDIDATE;
+DROP TABLE IF EXISTS VOTE;
+GO
+CREATE TABLE CANDIDATE (
+    ID INT,
+    NAME VARCHAR(50)
+);
+GO
+CREATE TABLE VOTE (
+    ID INT,
+    CANDIDATEID INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO CANDIDATE VALUES
+(1, 'A'),
+(2, 'B'),
+(3, 'C'),
+(4, 'D'),
+(5, 'E');
+GO
+INSERT INTO VOTE VALUES
+(1, 2),
+(2, 4),
+(3, 3),
+(4, 2),
+(5, 5);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM CANDIDATE ORDER BY ID;
+SELECT * FROM VOTE ORDER BY ID;
+GO
+/*******************************************************************************
+4. Solution Example: Find Candidate with Most Votes
+*******************************************************************************/
+WITH VOTE_COUNT AS (SELECT C.NAME, COUNT(V.ID) AS VOTE_COUNT
+FROM CANDIDATE C
+JOIN VOTE V
+ON C.ID = V.CANDIDATEID
+GROUP BY C.NAME
+)
+SELECT TOP 1 NAME FROM VOTE_COUNT ORDER BY VOTE_COUNT DESC
 ```
 
 # [578. Get Highest Answer Rate Question](https://leetcode.com/problems/get-highest-answer-rate-question/)
