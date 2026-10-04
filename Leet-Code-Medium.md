@@ -8035,7 +8035,80 @@ LEFT JOIN ACTIVITY AS T2
 ```
 
 # [570. Managers with at Least 5 Direct Reports](https://leetcode.com/problems/managers-with-at-least-5-direct-reports/)
+```
+Table: Employee
++-------------+---------+
+| Column Name | Type    |
++-------------+---------+
+| id          | int     |
+| name        | varchar |
+| department  | varchar |
+| managerId   | int     |
++-------------+---------+
+id is the primary key (column with unique values) for this table.
+Each row of this table indicates the name of an employee, their department, and the id of their manager.
+If managerId is null, then the employee does not have a manager.
+No employee will be the manager of themself.
+ 
+Write a solution to find managers with at least five direct reports.
+
+Return the result table in any order.
+
+The result format is in the following example.
+
+Example 1:
+
+Input: 
+Employee table:
++-----+-------+------------+-----------+
+| id  | name  | department | managerId |
++-----+-------+------------+-----------+
+| 101 | John  | A          | null      |
+| 102 | Dan   | A          | 101       |
+| 103 | James | A          | 101       |
+| 104 | Amy   | A          | 101       |
+| 105 | Anne  | A          | 101       |
+| 106 | Ron   | B          | 101       |
++-----+-------+------------+-----------+
+Output: 
++------+
+| name |
++------+
+| John |
++------+
+```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS EMPLOYEE;
+GO
+CREATE TABLE EMPLOYEE (
+    ID INT,
+    NAME VARCHAR(50),
+    DEPARTMENT VARCHAR(50),
+    MANAGERID INT NULL
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO EMPLOYEE VALUES
+(101, 'John', 'A', NULL),
+(102, 'Dan', 'A', 101),
+(103, 'James', 'A', 101),
+(104, 'Amy', 'A', 101),
+(105, 'Anne', 'A', 101),
+(106, 'Ron', 'B', 101);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM EMPLOYEE ORDER BY DEPARTMENT, ID;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
 SELECT E1.NAME
 FROM EMPLOYEE E1
 JOIN (
@@ -8044,6 +8117,7 @@ JOIN (
     GROUP BY MANAGERID
     HAVING COUNT(*) >= 5
 ) E2 ON E1.ID = E2.MANAGERID;
+
 ```
 
 # [574. Winning Candidate](https://leetcode.com/problems/winning-candidate/)
