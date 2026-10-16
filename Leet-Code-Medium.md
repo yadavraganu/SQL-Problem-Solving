@@ -3051,7 +3051,72 @@ WHERE
 ```
 
 # [1613. Find the Missing IDs](https://leetcode.com/problems/find-the-missing-ids/)
+```
+Table: Customers
++---------------+---------+
+| Column Name   | Type    |
++---------------+---------+
+| customer_id   | int     |
+| customer_name | varchar |
++---------------+---------+
+customer_id is the column with unique values for this table.
+Each row of this table contains the name and the id customer.
+ 
+Write a solution to find the missing customer IDs. The missing IDs are ones that are not in the Customers table but  
+are in the range between 1 and the maximum customer_id present in the table.
+
+Notice that the maximum customer_id will not exceed 100.
+Return the result table ordered by ids in ascending order.
+The result format is in the following example.
+
+Example 1:
+
+Input: 
+Customers table:
++-------------+---------------+
+| customer_id | customer_name |
++-------------+---------------+
+| 1           | Alice         |
+| 4           | Bob           |
+| 5           | Charlie       |
++-------------+---------------+
+Output: 
++-----+
+| ids |
++-----+
+| 2   |
+| 3   |
++-----+
+Explanation: 
+The maximum customer_id present in the table is 5, so in the range [1,5], IDs 2 and 3 are missing from the table.
+```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS CUSTOMERS;
+GO
+CREATE TABLE CUSTOMERS (
+    CUSTOMER_ID INT,
+    CUSTOMER_NAME VARCHAR(50)
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO CUSTOMERS VALUES
+(1, 'Alice'),
+(4, 'Bob'),
+(5, 'Charlie');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM CUSTOMERS ORDER BY CUSTOMER_ID;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
 WITH CTE AS (
     -- ANCHOR MEMBER
     SELECT 1 AS ID, MAX(C.CUSTOMER_ID) AS MAX_ID
@@ -3066,10 +3131,7 @@ WITH CTE AS (
 )
 SELECT ID AS IDS
 FROM CTE AS C
-WHERE C.ID NOT IN (
-    SELECT CUSTOMER_ID
-    FROM CUSTOMERS
-)
+WHERE C.ID NOT IN (SELECT CUSTOMER_ID FROM CUSTOMERS)
 ORDER BY 1 ASC;
 ```
 
