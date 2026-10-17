@@ -2145,38 +2145,178 @@ ORDER BY 1 ASC
 ```
 
 # [1341. Movie Rating](https://leetcode.com/problems/movie-rating/)
+```
+Table: Movies
++---------------+---------+
+| Column Name   | Type    |
++---------------+---------+
+| movie_id      | int     |
+| title         | varchar |
++---------------+---------+
+movie_id is the primary key (column with unique values) for this table.
+title is the name of the movie.
+Each movie has a unique title.
+
+Table: Users
++---------------+---------+
+| Column Name   | Type    |
++---------------+---------+
+| user_id       | int     |
+| name          | varchar |
++---------------+---------+
+user_id is the primary key (column with unique values) for this table.
+The column 'name' has unique values.
+
+Table: MovieRating
++---------------+---------+
+| Column Name   | Type    |
++---------------+---------+
+| movie_id      | int     |
+| user_id       | int     |
+| rating        | int     |
+| created_at    | date    |
++---------------+---------+
+(movie_id, user_id) is the primary key (column with unique values) for this table.
+This table contains the rating of a movie by a user in their review.
+created_at is the user's review date. 
+
+Write a solution to:
+
+Find the name of the user who has rated the greatest number of movies. In case of a tie, return the lexicographically smaller user name.
+Find the movie name with the highest average rating in February 2020. In case of a tie, return the lexicographically smaller movie name.
+The result format is in the following example.
+
+Example 1:
+
+Input: 
+Movies table:
++-------------+--------------+
+| movie_id    |  title       |
++-------------+--------------+
+| 1           | Avengers     |
+| 2           | Frozen 2     |
+| 3           | Joker        |
++-------------+--------------+
+Users table:
++-------------+--------------+
+| user_id     |  name        |
++-------------+--------------+
+| 1           | Daniel       |
+| 2           | Monica       |
+| 3           | Maria        |
+| 4           | James        |
++-------------+--------------+
+MovieRating table:
++-------------+--------------+--------------+-------------+
+| movie_id    | user_id      | rating       | created_at  |
++-------------+--------------+--------------+-------------+
+| 1           | 1            | 3            | 2020-01-12  |
+| 1           | 2            | 4            | 2020-02-11  |
+| 1           | 3            | 2            | 2020-02-12  |
+| 1           | 4            | 1            | 2020-01-01  |
+| 2           | 1            | 5            | 2020-02-17  | 
+| 2           | 2            | 2            | 2020-02-01  | 
+| 2           | 3            | 2            | 2020-03-01  |
+| 3           | 1            | 3            | 2020-02-22  | 
+| 3           | 2            | 4            | 2020-02-25  | 
++-------------+--------------+--------------+-------------+
+Output: 
++--------------+
+| results      |
++--------------+
+| Daniel       |
+| Frozen 2     |
++--------------+
+Explanation: 
+Daniel and Monica have rated 3 movies ("Avengers", "Frozen 2" and "Joker") but Daniel is smaller lexicographically.
+Frozen 2 and Joker have a rating average of 3.5 in February but Frozen 2 is smaller lexicographically.
+```
 ```sql
-WITH THEMOSTACTIVEUSER AS (
-    SELECT TOP 1
-        U.NAME
-    FROM
-        USERS AS U
-        INNER JOIN MOVIERATING AS MR ON U.USER_ID = MR.USER_ID
-    GROUP BY
-        U.USER_ID,
-        U.NAME
-    ORDER BY
-        COUNT(*) DESC,
-        U.NAME
-),
-THEBESTMOVIEFEBRUARY AS (
-    SELECT TOP 1
-        M.TITLE
-    FROM
-        MOVIES AS M
-        INNER JOIN MOVIERATING AS MR ON M.MOVIE_ID = MR.MOVIE_ID
-    WHERE
-        MR.CREATED_AT >= '2020-02-01' AND MR.CREATED_AT < '2020-03-01'
-    GROUP BY
-        M.MOVIE_ID,
-        M.TITLE
-    ORDER BY
-        AVG(CAST(MR.RATING AS DECIMAL(10,2))) DESC,
-        M.TITLE
-)
-SELECT NAME AS RESULTS FROM THEMOSTACTIVEUSER
-UNION ALL
-SELECT TITLE FROM THEBESTMOVIEFEBRUARY;
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS MOVIERATING;
+DROP TABLE IF EXISTS MOVIES;
+DROP TABLE IF EXISTS USERS;
+GO
+CREATE TABLE MOVIES (
+    MOVIE_ID INT,
+    TITLE VARCHAR(100)
+);
+GO
+CREATE TABLE USERS (
+    USER_ID INT,
+    NAME VARCHAR(50)
+);
+GO
+CREATE TABLE MOVIERATING (
+    MOVIE_ID INT,
+    USER_ID INT,
+    RATING INT,
+    CREATED_AT DATE
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO MOVIES VALUES
+(1, 'Avengers'),
+(2, 'Frozen 2'),
+(3, 'Joker');
+GO
+INSERT INTO USERS VALUES
+(1, 'Daniel'),
+(2, 'Monica'),
+(3, 'Maria'),
+(4, 'James');
+GO
+INSERT INTO MOVIERATING VALUES
+(1, 1, 3, '2020-01-12'),
+(1, 2, 4, '2020-02-11'),
+(1, 3, 2, '2020-02-12'),
+(1, 4, 1, '2020-01-01'),
+(2, 1, 5, '2020-02-17'),
+(2, 2, 2, '2020-02-01'),
+(2, 3, 2, '2020-03-01'),
+(3, 1, 3, '2020-02-22'),
+(3, 2, 4, '2020-02-25');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM MOVIES ORDER BY MOVIE_ID;
+SELECT * FROM USERS ORDER BY USER_ID;
+SELECT * FROM MOVIERATING ORDER BY MOVIE_ID, USER_ID;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
+WITH 
+  WITH_RATING_COUNT AS (
+    SELECT 
+      NAME, 
+      COUNT(RATING) AS RATING_COUNT, 
+      DENSE_RANK() OVER(ORDER BY COUNT(RATING) DESC, NAME ASC) AS RNK 
+    FROM 
+      MOVIERATING R 
+      LEFT JOIN USERS U ON U.USER_ID = R.USER_ID 
+    GROUP BY NAME
+  ), 
+  WITH_AVG_RATING_MOV AS (
+    SELECT 
+      TITLE, 
+      AVG(RATING * 1.0) AS AVG_RATING,
+      DENSE_RANK() OVER(ORDER BY AVG(RATING * 1.0) DESC, TITLE ASC) AS RNK 
+    FROM 
+      MOVIERATING R 
+      LEFT JOIN MOVIES M ON M.MOVIE_ID = R.MOVIE_ID 
+    WHERE 
+      YEAR(CREATED_AT) = 2020 AND MONTH(CREATED_AT) = 2 
+    GROUP BY TITLE
+  ) 
+SELECT NAME AS RESULTS FROM WITH_RATING_COUNT WHERE RNK = 1 
+UNION ALL 
+SELECT TITLE AS RESULTS FROM WITH_AVG_RATING_MOV WHERE RNK = 1
 ```
 
 # [1355. Activity Participants](https://leetcode.com/problems/activity-participants/)
