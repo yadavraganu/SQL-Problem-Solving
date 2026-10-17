@@ -1,8 +1,6 @@
 # SQL Server
+## DATEPART: Returns Numeric Values (Integers)
 ```sql
--- ============================================
--- DATEPART: returns numeric values (integers)
--- ============================================
 SELECT 
     GETDATE() AS CurrentDateTime,              -- Current system date and time
 
@@ -21,10 +19,9 @@ SELECT
     DATEPART(MICROSECOND, SYSDATETIME()) AS MicrosecondPart, -- Microseconds (requires SYSDATETIME)
     DATEPART(NANOSECOND, SYSDATETIME())  AS NanosecondPart   -- Nanoseconds (requires SYSDATETIME)
 ;
-
--- ============================================
--- DATENAME: returns string values (names/text)
--- ============================================
+```
+## DATENAME: Returns String Values (names/text)
+```sql
 SELECT 
     GETDATE() AS CurrentDateTime,                -- Current system date and time
 
@@ -43,10 +40,10 @@ SELECT
     DATENAME(MICROSECOND, SYSDATETIME()) AS MicrosecondName, -- Microseconds as string
     DATENAME(NANOSECOND, SYSDATETIME())  AS NanosecondName   -- Nanoseconds as string
 ;
+```
 
--- ============================================
--- CURRENT DATE/TIME FUNCTIONS
--- ============================================
+## CURRENT DATE/TIME FUNCTIONS
+```sql
 SELECT
     GETDATE()           AS GetDateValue,        -- datetime, local server time (~3 ms precision)
     SYSDATETIME()       AS SysDateTimeValue,    -- datetime2(7), local server time (100 ns precision)
@@ -57,11 +54,9 @@ SELECT
     CAST(GETDATE() AS DATE) AS TodayDateOnly,   -- Date only (time removed)
     CAST(GETDATE() AS TIME) AS NowTimeOnly      -- Time only (date removed)
 ;
-
--- ============================================
--- DATEADD: add/subtract an interval to a date
--- Syntax: DATEADD(datepart, number, date)
--- ============================================
+```
+## DATEADD: add/subtract an interval to a date
+```sql
 SELECT
     DATEADD(DAY, 7, GETDATE())      AS PlusSevenDays,     -- 7 days from now
     DATEADD(DAY, -30, GETDATE())    AS MinusThirtyDays,   -- 30 days ago (negative number subtracts)
@@ -72,12 +67,9 @@ SELECT
     DATEADD(HOUR, 5, GETDATE())     AS PlusFiveHours,     -- 5 hours ahead
     DATEADD(MINUTE, -15, GETDATE()) AS MinusFifteenMins   -- 15 minutes ago
 ;
-
--- ============================================
--- DATEDIFF: number of datepart BOUNDARIES crossed
--- Syntax: DATEDIFF(datepart, startdate, enddate)
--- Note: counts boundaries, not full elapsed units
--- ============================================
+```
+## DATEDIFF: number of datepart BOUNDARIES crossed
+```sql
 SELECT
     DATEDIFF(DAY,    '2026-01-01', '2026-09-09') AS DaysBetween,    -- Days between two dates
     DATEDIFF(MONTH,  '2026-01-31', '2026-02-01') AS MonthsBetween,  -- Returns 1 (month boundary crossed, only 1 day apart!)
@@ -93,10 +85,9 @@ SELECT
     DATEDIFF(YEAR, @DOB, GETDATE()) 
     - CASE WHEN DATEADD(YEAR, DATEDIFF(YEAR, @DOB, GETDATE()), @DOB) > CAST(GETDATE() AS DATE) 
            THEN 1 ELSE 0 END AS AgeInYears;
-
--- ============================================
--- DATE CONSTRUCTION & BOUNDARIES
--- ============================================
+```
+## DATE CONSTRUCTION & BOUNDARIES
+```sql
 SELECT
     EOMONTH(GETDATE())              AS EndOfThisMonth,    -- Last day of current month
     EOMONTH(GETDATE(), 1)           AS EndOfNextMonth,    -- Last day of next month (2nd arg = month offset)
@@ -108,17 +99,15 @@ SELECT
     DATETRUNC(MONTH, GETDATE())     AS TruncToMonth,      -- SQL Server 2022+: truncate to first of month
     DATETRUNC(YEAR, GETDATE())      AS TruncToYear        -- SQL Server 2022+: truncate to Jan 1
 ;
-
 -- Start of day / start of month for older versions (pre-2022)
 SELECT
     DATEADD(DAY,   DATEDIFF(DAY,   0, GETDATE()), 0) AS StartOfToday,
     DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()), 0) AS StartOfMonth,
     DATEADD(YEAR,  DATEDIFF(YEAR,  0, GETDATE()), 0) AS StartOfYear
 ;
-
--- ============================================
--- SHORTHAND DATE FUNCTIONS & VALIDATION
--- ============================================
+```
+## SHORTHAND DATE FUNCTIONS & VALIDATION
+```sql
 SELECT
     YEAR(GETDATE())     AS YearNum,     -- Same as DATEPART(YEAR, ...)
     MONTH(GETDATE())    AS MonthNum,    -- Same as DATEPART(MONTH, ...)
@@ -126,12 +115,10 @@ SELECT
     ISDATE('2026-09-09') AS IsValidDate, -- 1 = valid date string, 0 = not valid
     ISDATE('2026-13-45') AS IsInvalidDate
 ;
+```
 
--- ============================================
--- FORMAT: .NET-style formatting (returns nvarchar)
--- Syntax: FORMAT(value, format_string [, culture])
--- Note: convenient but slower than CONVERT on big tables
--- ============================================
+## FORMAT: .NET-Style Formatting (Returns Nvarchar)
+```sql
 SELECT
     FORMAT(GETDATE(), 'yyyy-MM-dd')           AS IsoDate,        -- 2026-09-09
     FORMAT(GETDATE(), 'dd/MM/yyyy')           AS DayFirstDate,   -- 09/09/2026
@@ -146,11 +133,9 @@ SELECT
     FORMAT(0.256, 'P1')                       AS PercentFmt,     -- 25.6 %
     FORMAT(7, '000')                          AS ZeroPadded      -- 007
 ;
-
--- ============================================
--- CONVERT with style codes (date -> string)
--- Syntax: CONVERT(data_type, expression [, style])
--- ============================================
+```
+## CONVERT with style codes (date -> string)
+```sql
 SELECT
     CONVERT(VARCHAR(10), GETDATE(), 101) AS Style101_USA,      -- mm/dd/yyyy
     CONVERT(VARCHAR(10), GETDATE(), 103) AS Style103_British,  -- dd/mm/yyyy
@@ -164,7 +149,8 @@ SELECT
     CONVERT(VARCHAR(23), GETDATE(), 121) AS Style121_Milli,    -- yyyy-mm-dd hh:mi:ss.mmm
     CONVERT(VARCHAR(8),  GETDATE(), 108) AS Style108_Time      -- hh:mi:ss
 ;
-
+```
+```sql
 -- ============================================
 -- STRING FUNCTIONS
 -- ============================================
