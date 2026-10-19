@@ -2694,20 +2694,124 @@ ORDER BY 2 DESC
 ```
 
 # [1398. Customers Who Bought Products A and B but Not C](https://leetcode.com/problems/customers-who-bought-products-a-and-b-but-not-c/)
+```
+Table: Customers
++---------------------+---------+
+| Column Name         | Type    |
++---------------------+---------+
+| customer_id         | int     |
+| customer_name       | varchar |
++---------------------+---------+
+customer_id is the column with unique values for this table.
+customer_name is the name of the customer.
+
+Table: Orders
++---------------+---------+
+| Column Name   | Type    |
++---------------+---------+
+| order_id      | int     |
+| customer_id   | int     |
+| product_name  | varchar |
++---------------+---------+
+order_id is the column with unique values for this table.
+customer_id is the id of the customer who bought the product "product_name".
+ 
+Write a solution to report the customer_id and customer_name of customers who bought products  
+"A", "B" but did not buy the product "C" since we want to recommend them to purchase this product.
+
+Return the result table ordered by customer_id.
+
+The result format is in the following example.
+
+Example 1:
+
+Input: 
+Customers table:
++-------------+---------------+
+| customer_id | customer_name |
++-------------+---------------+
+| 1           | Daniel        |
+| 2           | Diana         |
+| 3           | Elizabeth     |
+| 4           | Jhon          |
++-------------+---------------+
+Orders table:
++------------+--------------+---------------+
+| order_id   | customer_id  | product_name  |
++------------+--------------+---------------+
+| 10         |     1        |     A         |
+| 20         |     1        |     B         |
+| 30         |     1        |     D         |
+| 40         |     1        |     C         |
+| 50         |     2        |     A         |
+| 60         |     3        |     A         |
+| 70         |     3        |     B         |
+| 80         |     3        |     D         |
+| 90         |     4        |     C         |
++------------+--------------+---------------+
+Output: 
++-------------+---------------+
+| customer_id | customer_name |
++-------------+---------------+
+| 3           | Elizabeth     |
++-------------+---------------+
+Explanation: Only the customer_id with id 3 bought the product A and B but not the product C.
+```
 ```sql
-SELECT
-    C.CUSTOMER_ID,
-    C.CUSTOMER_NAME
-FROM
-    CUSTOMERS AS C
-    INNER JOIN ORDERS AS O ON C.CUSTOMER_ID = O.CUSTOMER_ID
-GROUP BY
-    C.CUSTOMER_ID,
-    C.CUSTOMER_NAME
-HAVING
-    SUM(CASE WHEN O.PRODUCT_NAME = 'A' THEN 1 ELSE 0 END) > 0
-    AND SUM(CASE WHEN O.PRODUCT_NAME = 'B' THEN 1 ELSE 0 END) > 0
-    AND SUM(CASE WHEN O.PRODUCT_NAME = 'C' THEN 1 ELSE 0 END) = 0;
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS CUSTOMERS;
+DROP TABLE IF EXISTS ORDERS;
+GO
+CREATE TABLE CUSTOMERS (
+    CUSTOMER_ID INT,
+    CUSTOMER_NAME VARCHAR(50)
+);
+GO
+CREATE TABLE ORDERS (
+    ORDER_ID INT,
+    CUSTOMER_ID INT,
+    PRODUCT_NAME CHAR(1)
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO CUSTOMERS VALUES
+(1, 'Daniel'),
+(2, 'Diana'),
+(3, 'Elizabeth'),
+(4, 'Jhon');
+GO
+INSERT INTO ORDERS VALUES
+(10, 1, 'A'),
+(20, 1, 'B'),
+(30, 1, 'D'),
+(40, 1, 'C'),
+(50, 2, 'A'),
+(60, 3, 'A'),
+(70, 3, 'B'),
+(80, 3, 'D'),
+(90, 4, 'C');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM CUSTOMERS ORDER BY CUSTOMER_ID;
+SELECT * FROM ORDERS ORDER BY ORDER_ID;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
+SELECT O.CUSTOMER_ID, C.CUSTOMER_NAME
+FROM ORDERS O
+LEFT JOIN CUSTOMERS C ON O.CUSTOMER_ID = C.CUSTOMER_ID
+GROUP BY O.CUSTOMER_ID, C.CUSTOMER_NAME
+HAVING SUM(CASE WHEN PRODUCT_NAME = 'A' THEN 1 ELSE 0 END) >= 1
+AND SUM(CASE WHEN PRODUCT_NAME = 'B' THEN 1 ELSE 0 END) >= 1
+AND SUM(CASE WHEN PRODUCT_NAME = 'C' THEN 1 ELSE 0 END) = 0
+ORDER BY 1
 ```
 
 # [1440. Evaluate Boolean Expression](https://leetcode.com/problems/evaluate-boolean-expression/)
