@@ -155,7 +155,7 @@ SELECT
 ;
 ```
 
----
+<br></br>
 
 # 2. FORMATTING FUNCTIONS
 
@@ -301,7 +301,7 @@ SELECT
 ;
 ```
 
----
+<br></br>
 
 # 4. NUMERIC / MATH FUNCTIONS
 
@@ -348,7 +348,7 @@ SELECT
 ;
 ```
 
----
+<br></br>
 
 # 5. DATA TYPE CONVERSION FUNCTIONS
 
@@ -377,7 +377,7 @@ SELECT
 ;
 ```
 
----
+<br></br>
 
 # 6. NULL HANDLING & CONDITIONAL FUNCTIONS
 
@@ -407,7 +407,7 @@ SELECT
 ;
 ```
 
----
+<br></br>
 
 # 7. AGGREGATE FUNCTIONS
 
@@ -449,7 +449,7 @@ FROM Employees
 GROUP BY ROLLUP (DeptID, JobTitle);
 ```
 
----
+<br></br>
 
 # 8. WINDOW (ANALYTIC) FUNCTIONS
 
@@ -501,7 +501,7 @@ SELECT
 FROM Employees;
 ```
 
----
+<br></br>
 
 # 9. TABLE-VALUED FUNCTIONS
 
@@ -519,7 +519,7 @@ SELECT value FROM STRING_SPLIT('a;b;c', ';');            -- Splits a delimited s
 SELECT [key], value, type FROM OPENJSON('["x","y"]');    -- Splits a JSON array/object into rows
 ```
 
----
+<br></br>
 
 # 10. JSON FUNCTIONS
 
@@ -558,7 +558,7 @@ SELECT
 ;
 ```
 
----
+<br></br>
 
 # 11. HASH, ID & SECURITY FUNCTIONS
 
@@ -586,7 +586,7 @@ SELECT
 ;
 ```
 
----
+<br></br>
 
 # 12. SYSTEM & METADATA FUNCTIONS
 
@@ -646,7 +646,7 @@ SELECT
 ;
 ```
 
----
+<br></br>
 
 # 13. ERROR & TRANSACTION FUNCTIONS
 
@@ -671,7 +671,7 @@ END CATCH;
 SELECT XACT_STATE() AS TxnState;  -- 1 = active, committable | 0 = no transaction | -1 = doomed (must ROLLBACK)
 ```
 
----
+<br></br>
 
 # 14. SQL SERVER 2025 ADDITIONS (2025+)
 
