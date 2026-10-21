@@ -5861,13 +5861,91 @@ GROUP BY
 ```
 
 # [2388. Change Null Values in a Table to the Previous Value](https://leetcode.com/problems/change-null-values-in-a-table-to-the-previous-value/)
+```
+Table: CoffeeShop
++-------------+---------+
+| Column Name | Type    |
++-------------+---------+
+| id          | int     |
+| drink       | varchar |
++-------------+---------+
+id is the primary key (column with unique values) for this table.
+Each row in this table shows the order id and the name of the drink ordered. Some drink rows are nulls.
+ 
+Write a solution to replace the null values of the drink with the name of the drink of the previous row  
+that is not null. It is guaranteed that the drink on the first row of the table is not null.
+
+Return the result table in the same order as the input.
+
+The result format is shown in the following example.
+
+Example 1:
+
+Input: 
+CoffeeShop table:
++----+-------------------+
+| id | drink             |
++----+-------------------+
+| 9  | Rum and Coke      |
+| 6  | null              |
+| 7  | null              |
+| 3  | St Germain Spritz |
+| 1  | Orange Margarita  |
+| 2  | null              |
++----+-------------------+
+Output: 
++----+-------------------+
+| id | drink             |
++----+-------------------+
+| 9  | Rum and Coke      |
+| 6  | Rum and Coke      |
+| 7  | Rum and Coke      |
+| 3  | St Germain Spritz |
+| 1  | Orange Margarita  |
+| 2  | Orange Margarita  |
++----+-------------------+
+Explanation: 
+For ID 6, the previous value that is not null is from ID 9. We replace the null with "Rum and Coke".
+For ID 7, the previous value that is not null is from ID 9. We replace the null with "Rum and Coke;.
+For ID 2, the previous value that is not null is from ID 1. We replace the null with "Orange Margarita".
+Note that the rows in the output are the same as in the input.
+```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS COFFEESHOP;
+GO
+CREATE TABLE COFFEESHOP (
+    ID INT,
+    DRINK VARCHAR(100)
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO COFFEESHOP VALUES
+(9, 'Rum and Coke'),
+(6, NULL),
+(7, NULL),
+(3, 'St Germain Spritz'),
+(1, 'Orange Margarita'),
+(2, NULL);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM COFFEESHOP ORDER BY ID;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
 WITH RN_CTE AS (
-    SELECT ID, DRINK, ROW_NUMBER() OVER () AS RN
+    SELECT ID, DRINK, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RN
     FROM COFFEESHOP
 ),
 GROUP_CTE AS (
-    SELECT ID, DRINK, RN, SUM(NOT ISNULL(DRINK)) OVER (ORDER BY RN) AS GROUP_ID
+    SELECT ID, DRINK, RN, SUM(IIF(DRINK IS NOT NULL,1,0)) OVER (ORDER BY RN) AS GROUP_ID
     FROM RN_CTE
 )
 SELECT ID, MAX(DRINK) OVER (PARTITION BY GROUP_ID) AS DRINK
