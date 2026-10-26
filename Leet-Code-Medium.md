@@ -3703,33 +3703,107 @@ GROUP BY FROM_ID, TO_ID;
 
 # [1709. Biggest Window Between Visits](https://leetcode.com/problems/biggest-window-between-visits/)
 ```
+Table: UserVisits
++-------------+------+
+| Column Name | Type |
++-------------+------+
+| user_id     | int  |
+| visit_date  | date |
++-------------+------+
+This table does not have a primary key, it might contain duplicate rows.
+This table contains logs of the dates that users visited a certain retailer.
+Assume today's date is '2021-1-1'.
+
+Write a solution that will, for each user_id, find out the largest window of days between each visit  
+and the one right after it (or today if you are considering the last visit).
+
+Return the result table ordered by user_id.
+
+The query result format is in the following example.
+
+Example 1:
+Input: 
+UserVisits table:
++---------+------------+
+| user_id | visit_date |
++---------+------------+
+| 1       | 2020-11-28 |
+| 1       | 2020-10-20 |
+| 1       | 2020-12-3  |
+| 2       | 2020-10-5  |
+| 2       | 2020-12-9  |
+| 3       | 2020-11-11 |
++---------+------------+
+Output: 
++---------+---------------+
+| user_id | biggest_window|
++---------+---------------+
+| 1       | 39            |
+| 2       | 65            |
+| 3       | 51            |
++---------+---------------+
+Explanation: 
+For the first user, the windows in question are between dates:
+    - 2020-10-20 and 2020-11-28 with a total of 39 days. 
+    - 2020-11-28 and 2020-12-3 with a total of 5 days. 
+    - 2020-12-3 and 2021-1-1 with a total of 29 days.
+Making the biggest window the one with 39 days.
+For the second user, the windows in question are between dates:
+    - 2020-10-5 and 2020-12-9 with a total of 65 days.
+    - 2020-12-9 and 2021-1-1 with a total of 23 days.
+Making the biggest window the one with 65 days.
+For the third user, the only window in question is between dates 2020-11-11 and 2021-1-1 with a total of 51 days.
 ```
 ```sql
-SELECT 
-  USER_ID, 
-  MAX(DIFF) AS BIGGEST_WINDOW 
-FROM 
-  (
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS USERVISITS;
+GO
+CREATE TABLE USERVISITS (
+    USER_ID INT,
+    VISIT_DATE DATE
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO USERVISITS VALUES
+(1, '2020-11-28'),
+(1, '2020-10-20'),
+(1, '2020-12-03'),
+(2, '2020-10-05'),
+(2, '2020-12-09'),
+(3, '2020-11-11');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM USERVISITS ORDER BY USER_ID, VISIT_DATE;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
+WITH 
+  GAP_WINDOW AS (
     SELECT 
-      USER_ID, 
+      *, 
       DATEDIFF(
-        COALESCE(
-          LEAD(VISIT_DATE) OVER (
-            PARTITION BY USER_ID 
-            ORDER BY 
-              VISIT_DATE
-          ), 
-          '2021-01-01'
-        ), 
-        VISIT_DATE
-      ) AS DIFF 
+        DAY, 
+        VISIT_DATE, 
+        LEAD(VISIT_DATE, 1, '2021-1-1') OVER(PARTITION BY USER_ID ORDER BY VISIT_DATE ASC
+        )
+      ) AS GAP 
     FROM 
       USERVISITS
-  ) A 
+  ) 
+SELECT 
+  USER_ID, 
+  MAX(GAP) AS BIGGEST_WINDOW 
+FROM 
+  GAP_WINDOW 
 GROUP BY 
-  USER_ID 
-ORDER BY 
-  USER_ID;
+  USER_ID
 ```
 
 # [1715. Count Apples and Oranges](https://leetcode.com/problems/count-apples-and-oranges/)
