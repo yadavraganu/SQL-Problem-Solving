@@ -7071,9 +7071,94 @@ WHERE TRANS_NO = 3 AND SPEND > PREV_TO_PREV_SPEND AND SPEND > PREV_SPEND
 ```
 
 # [2988. Manager of the Largest Department](https://leetcode.com/problems/manager-of-the-largest-department/)
+```
+Table: Employees
++-------------+---------+
+| Column Name | Type    |
++-------------+---------+
+| emp_id      | int     |
+| emp_name    | varchar |
+| dep_id      | int     |
+| position    | varchar |
++-------------+---------+
+emp_id is column of unique values for this table.
+This table contains emp_id, emp_name, dep_id, and position.
+
+Write a solution to find the name of the manager from the largest department. There may be multiple largest  
+departments when the number of employees in those departments is the same.
+
+Return the result table sorted by dep_id in ascending order.
+
+The result format is in the following example.
+
+Example 1:
+
+Input: 
+Employees table:
++--------+----------+--------+---------------+
+| emp_id | emp_name | dep_id | position      | 
++--------+----------+--------+---------------+
+| 156    | Michael  | 107    | Manager       |
+| 112    | Lucas    | 107    | Consultant    |    
+| 8      | Isabella | 101    | Manager       | 
+| 160    | Joseph   | 100    | Manager       | 
+| 80     | Aiden    | 100    | Engineer      | 
+| 190    | Skylar   | 100    | Freelancer    | 
+| 196    | Stella   | 101    | Coordinator   |
+| 167    | Audrey   | 100    | Consultant    |
+| 97     | Nathan   | 101    | Supervisor    |
+| 128    | Ian      | 101    | Administrator |
+| 81     | Ethan    | 107    | Administrator |
++--------+----------+--------+---------------+
+Output
++--------------+--------+
+| manager_name | dep_id | 
++--------------+--------+
+| Joseph       | 100    | 
+| Isabella     | 101    | 
++--------------+--------+
+Explanation
+- Departments with IDs 100 and 101 each has a total of 4 employees, while department 107 has 3 employees. Since both departments 100 and 101 have an equal number of employees, their respective managers will be included.
+Output table is ordered by dep_id in ascending order.
+```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS EMPLOYEES;
+GO
+CREATE TABLE EMPLOYEES (
+    EMP_ID INT,
+    EMP_NAME VARCHAR(50),
+    DEP_ID INT,
+    POSITION VARCHAR(50)
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO EMPLOYEES VALUES
+(156, 'Michael', 107, 'Manager'),
+(112, 'Lucas', 107, 'Consultant'),
+(8, 'Isabella', 101, 'Manager'),
+(160, 'Joseph', 100, 'Manager'),
+(80, 'Aiden', 100, 'Engineer'),
+(190, 'Skylar', 100, 'Freelancer'),
+(196, 'Stella', 101, 'Coordinator'),
+(167, 'Audrey', 100, 'Consultant'),
+(97, 'Nathan', 101, 'Supervisor'),
+(128, 'Ian', 101, 'Administrator'),
+(81, 'Ethan', 107, 'Administrator');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM EMPLOYEES ORDER BY DEP_ID, EMP_ID;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
 WITH RANKEDDEPARTMENTS AS (
-    -- THIS CTE RANKS DEPARTMENTS BASED ON THE NUMBER OF EMPLOYEES THEY HAVE.
     SELECT
         DEP_ID,
         DENSE_RANK() OVER (ORDER BY COUNT(*) DESC) AS RNK
@@ -7083,24 +7168,19 @@ WITH RANKEDDEPARTMENTS AS (
         DEP_ID
 )
 SELECT
-    -- SELECTS THE EMPLOYEE'S NAME (ALIASED AS MANAGER_NAME) AND THEIR DEPARTMENT ID.
     E.EMP_NAME AS MANAGER_NAME,
     E.DEP_ID
 FROM
     EMPLOYEES AS E
--- JOINS THE EMPLOYEES TABLE WITH THE RANKEDDEPARTMENTS CTE ON THE DEPARTMENT ID.
 INNER JOIN
     RANKEDDEPARTMENTS AS RD
     ON E.DEP_ID = RD.DEP_ID
 WHERE
-    -- FILTERS FOR EMPLOYEES WHO ARE MANAGERS AND BELONG TO A DEPARTMENT WITH A RANK OF 1 (THE LARGEST DEPARTMENT).
     E.POSITION = 'Manager'
     AND RD.RNK = 1
--- ORDERS THE RESULTS BY DEPARTMENT ID.
 ORDER BY
     E.DEP_ID;
 ```
-
 # [2989. Class Performance](https://leetcode.com/problems/class-performance/)
 ```
 Table: Scores
