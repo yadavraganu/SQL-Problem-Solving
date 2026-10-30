@@ -6468,8 +6468,103 @@ INNER JOIN PRDCT_YRLY_PRCHS N
 ON C.PRODUCT_ID = N.PRODUCT_ID AND C.YEAR + 1 = N.YEAR
 ```
 # [2298. Tasks Count in the Weekend](https://leetcode.com/problems/tasks-count-in-the-weekend/)
+```
+Table: Tasks
++-------------+------+
+| Column Name | Type |
++-------------+------+
+| task_id     | int  |
+| assignee_id | int  |
+| submit_date | date |
++-------------+------+
+task_id is the primary key (column with unique values) for this table.
+Each row in this table contains the ID of a task, the id of the assignee, and the submission date.
+
+Write a solution to report:
+the number of tasks that were submitted during the weekend (Saturday, Sunday) as weekend_cnt, and
+the number of tasks that were submitted during the working days as working_cnt.
+Return the result table in any order.
+
+The result format is shown in the following example.
+
+Example 1:
+
+Input: 
+Tasks table:
++---------+-------------+-------------+
+| task_id | assignee_id | submit_date |
++---------+-------------+-------------+
+| 1       | 1           | 2022-06-13  |
+| 2       | 6           | 2022-06-14  |
+| 3       | 6           | 2022-06-15  |
+| 4       | 3           | 2022-06-18  |
+| 5       | 5           | 2022-06-19  |
+| 6       | 7           | 2022-06-19  |
++---------+-------------+-------------+
+Output: 
++-------------+-------------+
+| weekend_cnt | working_cnt |
++-------------+-------------+
+| 3           | 3           |
++-------------+-------------+
+Explanation: 
+Task 1 was submitted on Monday.
+Task 2 was submitted on Tuesday.
+Task 3 was submitted on Wednesday.
+Task 4 was submitted on Saturday.
+Task 5 was submitted on Sunday.
+Task 6 was submitted on Sunday.
+3 tasks were submitted during the weekend.
+3 tasks were submitted during the working days.
+```
 ```sql
-SELECT
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS TASKS;
+GO
+CREATE TABLE TASKS (
+    TASK_ID INT,
+    ASSIGNEE_ID INT,
+    SUBMIT_DATE DATE
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO TASKS VALUES
+(1, 1, '2022-06-13'),
+(2, 6, '2022-06-14'),
+(3, 6, '2022-06-15'),
+(4, 3, '2022-06-18'),
+(5, 5, '2022-06-19'),
+(6, 7, '2022-06-19');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM TASKS ORDER BY TASK_ID;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
+WITH 
+  DAY_WISE_COUNT AS (
+    SELECT 
+      DATENAME(WEEKDAY, SUBMIT_DATE) AS WEEK_DAY, 
+      COUNT(TASK_ID) AS COUNT 
+    FROM 
+      TASKS 
+    GROUP BY 
+      DATENAME(WEEKDAY, SUBMIT_DATE)
+  ) 
+SELECT 
+  SUM(CASE WHEN WEEK_DAY IN ('Saturday', 'Sunday') THEN COUNT ELSE 0 END) AS WEEKEND_CNT, 
+  SUM(CASE WHEN WEEK_DAY NOT IN ('Saturday', 'Sunday') THEN COUNT ELSE 0 END) AS WORKING_CNT 
+FROM 
+  DAY_WISE_COUNT
+  ----------------------------------------------------------------------------------------
+  SELECT
     SUM(CASE WHEN DATEPART(WEEKDAY, SUBMIT_DATE) IN (1, 7) THEN 1 ELSE 0 END) AS WEEKEND_CNT,
     SUM(CASE WHEN DATEPART(WEEKDAY, SUBMIT_DATE) NOT IN (1, 7) THEN 1 ELSE 0 END) AS WORKING_CNT
 FROM TASKS;
