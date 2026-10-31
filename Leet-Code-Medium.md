@@ -4297,46 +4297,128 @@ FROM SCORES
 ```
 
 # [1783. Grand Slam Titles](https://leetcode.com/problems/grand-slam-titles/)
+```
+Table: Players
++----------------+---------+
+| Column Name    | Type    |
++----------------+---------+
+| player_id      | int     |
+| player_name    | varchar |
++----------------+---------+
+player_id is the primary key (column with unique values) for this table.
+Each row in this table contains the name and the ID of a tennis player.
+ 
+Table: Championships
++---------------+---------+
+| Column Name   | Type    |
++---------------+---------+
+| year          | int     |
+| Wimbledon     | int     |
+| Fr_open       | int     |
+| US_open       | int     |
+| Au_open       | int     |
++---------------+---------+
+year is the primary key (column with unique values) for this table.
+Each row of this table contains the IDs of the players who won one each tennis tournament of the grand slam.
+ 
+Write a solution to report the number of grand slam tournaments won by each player. Do not include the players  
+who did not win any tournament.
+
+Return the result table in any order.
+
+The result format is in the following example.
+
+Example 1:
+
+Input: 
+Players table:
++-----------+-------------+
+| player_id | player_name |
++-----------+-------------+
+| 1         | Nadal       |
+| 2         | Federer     |
+| 3         | Novak       |
++-----------+-------------+
+Championships table:
++------+-----------+---------+---------+---------+
+| year | Wimbledon | Fr_open | US_open | Au_open |
++------+-----------+---------+---------+---------+
+| 2018 | 1         | 1       | 1       | 1       |
+| 2019 | 1         | 1       | 2       | 2       |
+| 2020 | 2         | 1       | 2       | 2       |
++------+-----------+---------+---------+---------+
+Output: 
++-----------+-------------+-------------------+
+| player_id | player_name | grand_slams_count |
++-----------+-------------+-------------------+
+| 2         | Federer     | 5                 |
+| 1         | Nadal       | 7                 |
++-----------+-------------+-------------------+
+Explanation: 
+Player 1 (Nadal) won 7 titles: Wimbledon (2018, 2019), Fr_open (2018, 2019, 2020), US_open (2018), and Au_open (2018).
+Player 2 (Federer) won 5 titles: Wimbledon (2020), US_open (2019, 2020), and Au_open (2019, 2020).
+Player 3 (Novak) did not win anything, we did not include them in the result table.
+```
 ```sql
-SELECT 
-    T.PLAYER_ID, 
-    PLAYERS.PLAYER_NAME, 
-    COUNT(1) AS GRAND_SLAMS_COUNT
-FROM 
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS CHAMPIONSHIPS;
+DROP TABLE IF EXISTS PLAYERS;
+GO
+CREATE TABLE PLAYERS (
+    PLAYER_ID INT,
+    PLAYER_NAME VARCHAR(50)
+);
+GO
+CREATE TABLE CHAMPIONSHIPS (
+    YEAR INT,
+    WIMBLEDON INT,
+    FR_OPEN INT,
+    US_OPEN INT,
+    AU_OPEN INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO PLAYERS VALUES
+(1, 'Nadal'),
+(2, 'Federer'),
+(3, 'Novak');
+GO
+INSERT INTO CHAMPIONSHIPS VALUES
+(2018, 1, 1, 1, 1),
+(2019, 1, 1, 2, 2),
+(2020, 2, 1, 2, 2);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM PLAYERS ORDER BY PLAYER_ID;
+SELECT * FROM CHAMPIONSHIPS ORDER BY YEAR;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
+WITH COMBINED_DATA AS
 (
-    SELECT YEAR, 'Wimbledon' AS TOURNAMENT, WIMBLEDON AS PLAYER_ID FROM CHAMPIONSHIPS
+    SELECT WIMBLEDON AS PLAYER_ID FROM CHAMPIONSHIPS
     UNION ALL
-    SELECT YEAR, 'Fr_open' AS TOURNAMENT, FR_OPEN AS PLAYER_ID FROM CHAMPIONSHIPS
+    SELECT FR_OPEN AS PLAYER_ID FROM CHAMPIONSHIPS
     UNION ALL
-    SELECT YEAR, 'US_open' AS TOURNAMENT, US_OPEN AS PLAYER_ID FROM CHAMPIONSHIPS
+    SELECT US_OPEN AS PLAYER_ID FROM CHAMPIONSHIPS
     UNION ALL
-    SELECT YEAR, 'Au_open' AS TOURNAMENT, AU_OPEN AS PLAYER_ID FROM CHAMPIONSHIPS
-) T
-INNER JOIN PLAYERS ON T.PLAYER_ID = PLAYERS.PLAYER_ID
-GROUP BY T.PLAYER_ID, PLAYERS.PLAYER_NAME
-ORDER BY GRAND_SLAMS_COUNT DESC;
------------------------------
+    SELECT AU_OPEN AS PLAYER_ID FROM CHAMPIONSHIPS
+)
 SELECT 
-    P.PLAYER_ID, 
-    P.PLAYER_NAME,
-    SUM(CASE WHEN C.WIMBLEDON = P.PLAYER_ID THEN 1 ELSE 0 END) +
-    SUM(CASE WHEN C.FR_OPEN = P.PLAYER_ID THEN 1 ELSE 0 END) +
-    SUM(CASE WHEN C.US_OPEN = P.PLAYER_ID THEN 1 ELSE 0 END) +
-    SUM(CASE WHEN C.AU_OPEN = P.PLAYER_ID THEN 1 ELSE 0 END) AS GRAND_SLAMS_COUNT
-FROM 
-    PLAYERS AS P
-CROSS JOIN 
-    CHAMPIONSHIPS AS C
-GROUP BY 
-    P.PLAYER_ID, 
-    P.PLAYER_NAME
-HAVING 
-    SUM(CASE WHEN C.WIMBLEDON = P.PLAYER_ID THEN 1 ELSE 0 END) +
-    SUM(CASE WHEN C.FR_OPEN = P.PLAYER_ID THEN 1 ELSE 0 END) +
-    SUM(CASE WHEN C.US_OPEN = P.PLAYER_ID THEN 1 ELSE 0 END) +
-    SUM(CASE WHEN C.AU_OPEN = P.PLAYER_ID THEN 1 ELSE 0 END) > 0
-ORDER BY 
-    GRAND_SLAMS_COUNT DESC;
+    CD.PLAYER_ID, 
+    P.PLAYER_NAME, 
+    COUNT(1) AS GRAND_SLAMS_COUNT
+FROM COMBINED_DATA CD
+INNER JOIN PLAYERS P ON P.PLAYER_ID = CD.PLAYER_ID
+GROUP BY CD.PLAYER_ID, P.PLAYER_NAME
+ORDER BY 3 DESC;
 ```
 
 # [180. Consecutive Numbers](https://leetcode.com/problems/consecutive-numbers/)
