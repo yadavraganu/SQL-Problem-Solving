@@ -5402,7 +5402,96 @@ GROUP BY
 ```
 
 # [1949. Strong Friendship](https://leetcode.com/problems/strong-friendship/)
+```
+Table: Friendship
++-------------+------+
+| Column Name | Type |
++-------------+------+
+| user1_id    | int  |
+| user2_id    | int  |
++-------------+------+
+(user1_id, user2_id) is the primary key (combination of columns with unique values) for this table.
+Each row of this table indicates that the users user1_id and user2_id are friends.
+Note that user1_id < user2_id.
+ 
+A friendship between a pair of friends x and y is strong if x and y have at least three common friends.
+
+Write a solution to find all the strong friendships.
+
+Note that the result table should not contain duplicates with user1_id < user2_id.
+
+Return the result table in any order.
+
+The result format is in the following example.
+
+Example 1:
+
+Input: 
+Friendship table:
++----------+----------+
+| user1_id | user2_id |
++----------+----------+
+| 1        | 2        |
+| 1        | 3        |
+| 2        | 3        |
+| 1        | 4        |
+| 2        | 4        |
+| 1        | 5        |
+| 2        | 5        |
+| 1        | 7        |
+| 3        | 7        |
+| 1        | 6        |
+| 3        | 6        |
+| 2        | 6        |
++----------+----------+
+Output: 
++----------+----------+---------------+
+| user1_id | user2_id | common_friend |
++----------+----------+---------------+
+| 1        | 2        | 4             |
+| 1        | 3        | 3             |
++----------+----------+---------------+
+Explanation: 
+Users 1 and 2 have 4 common friends (3, 4, 5, and 6).
+Users 1 and 3 have 3 common friends (2, 6, and 7).
+We did not include the friendship of users 2 and 3 because they only have two common friends (1 and 6).
+```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS FRIENDSHIP;
+GO
+CREATE TABLE FRIENDSHIP (
+    USER1_ID INT,
+    USER2_ID INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO FRIENDSHIP VALUES
+(1, 2),
+(1, 3),
+(2, 3),
+(1, 4),
+(2, 4),
+(1, 5),
+(2, 5),
+(1, 7),
+(3, 7),
+(1, 6),
+(3, 6),
+(2, 6);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM FRIENDSHIP ORDER BY USER1_ID, USER2_ID;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
 WITH BIDIRECTIONALFRIENDSHIPS AS (
     -- STEP 1: CREATE A TEMPORARY TABLE OF ALL FRIENDSHIPS IN BOTH DIRECTIONS.
     SELECT USER1_ID, USER2_ID FROM FRIENDSHIP
@@ -5412,8 +5501,8 @@ WITH BIDIRECTIONALFRIENDSHIPS AS (
 COMMONFRIENDS AS (
     -- STEP 2: FIND PAIRS WITH AT LEAST 3 COMMON FRIENDS.
     SELECT
-        T1.USER1_ID AS USER1,
-        T2.USER1_ID AS USER2,
+        T1.USER1_ID,
+        T2.USER1_ID AS USER2_ID,
         COUNT(T1.USER2_ID) AS COMMON_FRIEND_COUNT
     FROM BIDIRECTIONALFRIENDSHIPS AS T1
     JOIN BIDIRECTIONALFRIENDSHIPS AS T2
@@ -5427,13 +5516,14 @@ COMMONFRIENDS AS (
 )
 -- STEP 3: SELECT ONLY THE PAIRS THAT ARE ALREADY FRIENDS.
 SELECT
-    CF.USER1,
-    CF.USER2
+    CF.USER1_ID,
+    CF.USER2_ID,
+    CF.COMMON_FRIEND_COUNT
 FROM COMMONFRIENDS CF
 JOIN FRIENDSHIP F
     -- A JOIN IS USED TO CHECK FOR EXISTING FRIENDSHIPS IN A STANDARD WAY.
-    ON (CF.USER1 = F.USER1_ID AND CF.USER2 = F.USER2_ID)
-    OR (CF.USER1 = F.USER2_ID AND CF.USER2 = F.USER1_ID);
+    ON (CF.USER1_ID = F.USER1_ID AND CF.USER2_ID = F.USER2_ID)
+    OR (CF.USER1_ID = F.USER2_ID AND CF.USER2_ID = F.USER1_ID);
 ```
 
 # [1951. All the Pairs With the Maximum Number of Common Followers](https://leetcode.com/problems/all-the-pairs-with-the-maximum-number-of-common-followers/)
