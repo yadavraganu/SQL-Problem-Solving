@@ -10602,37 +10602,182 @@ ORDER BY
 ```
 
 # [3118. Friday Purchase III](https://leetcode.com/problems/friday-purchase-iii/)
+```
+Table: Purchases
++---------------+------+
+| Column Name   | Type |
++---------------+------+
+| user_id       | int  |
+| purchase_date | date |
+| amount_spend  | int  |
++---------------+------+
+(user_id, purchase_date, amount_spend) is the primary key (combination of columns with unique values) for this table.
+purchase_date will range from November 1, 2023, to November 30, 2023, inclusive of both dates.
+Each row contains user_id, purchase_date, and amount_spend.
+
+Table: Users
++-------------+------+
+| Column Name | Type |
++-------------+------+
+| user_id     | int  |
+| membership  | enum |
++-------------+------+
+user_id is the primary key for this table.
+membership is an ENUM (category) type of ('Standard', 'Premium', 'VIP').
+Each row of this table indicates the user_id, membership type.
+
+Write a solution to calculate the total spending by Premium and VIP members on each Friday of every week in November 2023.  If there are no purchases on a particular Friday by Premium or VIP members, it should be considered as 0.
+
+Return the result table ordered by week of the month,  and membership in ascending order.
+
+The result format is in the following example.
+
+Example:
+
+Input:
+
+Purchases table:
++---------+---------------+--------------+
+| user_id | purchase_date | amount_spend |
++---------+---------------+--------------+
+| 11      | 2023-11-03    | 1126         |
+| 15      | 2023-11-10    | 7473         |
+| 17      | 2023-11-17    | 2414         |
+| 12      | 2023-11-24    | 9692         |
+| 8       | 2023-11-24    | 5117         |
+| 1       | 2023-11-24    | 5241         |
+| 10      | 2023-11-22    | 8266         |
+| 13      | 2023-11-21    | 12000        |
++---------+---------------+--------------+
+Users table:
++---------+------------+
+| user_id | membership |
++---------+------------+
+| 11      | Premium    |
+| 15      | VIP        |
+| 17      | Standard   |
+| 12      | VIP        |
+| 8       | Premium    |
+| 1       | VIP        |
+| 10      | Standard   |
+| 13      | Premium    |
++---------+------------+
+Output:
++---------------+-------------+--------------+
+| week_of_month | membership  | total_amount |
++---------------+-------------+--------------+
+| 1             | Premium     | 1126         |
+| 1             | VIP         | 0            |
+| 2             | Premium     | 0            |
+| 2             | VIP         | 7473         |
+| 3             | Premium     | 0            |
+| 3             | VIP         | 0            |
+| 4             | Premium     | 5117         |
+| 4             | VIP         | 14933        |
++---------------+-------------+--------------+
+        
+Explanation:
+
+- During the first week of November 2023, a transaction occurred on Friday, 2023-11-03, by a Premium member amounting to $1,126. No transactions were made by VIP members on this day, resulting in a value of 0.
+- For the second week of November 2023, there was a transaction on Friday, 2023-11-10, and it was made by a VIP member, amounting to $7,473. Since there were no purchases by Premium members that Friday, the output shows 0 for Premium members.
+- Similarly, during the third week of November 2023, no transactions by Premium or VIP members occurred on Friday, 2023-11-17, which shows 0 for both categories in this week.
+- In the fourth week of November 2023, transactions occurred on Friday, 2023-11-24, involving one Premium member purchase of $5,117 and VIP member purchases totaling $14,933 ($9,692 from one and $5,241 from another).
+Note: The output table is ordered by week_of_month and membership in ascending order.
+```
 ```sql
-WITH FRIDAYS AS (
-    SELECT
-        1 AS WEEK_OF_MONTH,
-        CAST('2023-11-03' AS DATE) AS PURCHASE_DATE
-    UNION ALL
-    SELECT
-        WEEK_OF_MONTH + 1,
-        DATEADD(day, 7, PURCHASE_DATE)
-    FROM FRIDAYS
-    WHERE WEEK_OF_MONTH < 4
-),
-MEMBERSHIPS AS (
-    SELECT 'Premium' AS MEMBERSHIP
-    UNION ALL
-    SELECT 'VIP'
-)
-SELECT
-    f.WEEK_OF_MONTH,
-    m.MEMBERSHIP,
-    ISNULL(SUM(p.AMOUNT_SPEND), 0) AS TOTAL_AMOUNT
-FROM FRIDAYS f
-CROSS JOIN MEMBERSHIPS m
-LEFT JOIN USERS u ON m.MEMBERSHIP = u.MEMBERSHIP
-LEFT JOIN PURCHASES p ON f.PURCHASE_DATE = p.PURCHASE_DATE AND u.USER_ID = p.USER_ID
-GROUP BY
-    f.WEEK_OF_MONTH,
-    m.MEMBERSHIP
-ORDER BY
-    f.WEEK_OF_MONTH,
-    m.MEMBERSHIP;
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS PURCHASES;
+DROP TABLE IF EXISTS USERS;
+GO
+CREATE TABLE PURCHASES (
+    USER_ID INT,
+    PURCHASE_DATE DATE,
+    AMOUNT_SPEND INT
+);
+GO
+CREATE TABLE USERS (
+    USER_ID INT,
+    MEMBERSHIP VARCHAR(20)
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO PURCHASES VALUES
+(11, '2023-11-03', 1126),
+(15, '2023-11-10', 7473),
+(17, '2023-11-17', 2414),
+(12, '2023-11-24', 9692),
+(8, '2023-11-24', 5117),
+(1, '2023-11-24', 5241),
+(10, '2023-11-22', 8266),
+(13, '2023-11-21', 12000);
+GO
+INSERT INTO USERS VALUES
+(11, 'Premium'),
+(15, 'VIP'),
+(17, 'Standard'),
+(12, 'VIP'),
+(8, 'Premium'),
+(1, 'VIP'),
+(10, 'Standard'),
+(13, 'Premium');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM PURCHASES ORDER BY PURCHASE_DATE, USER_ID;
+SELECT * FROM USERS ORDER BY USER_ID;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
+WITH 
+  NOVEMBER_DAYS AS (
+    SELECT 
+      CONVERT(DATE, '2023-11-01') AS CURR_DAY, 
+      1 AS WEEK_OF_MONTH 
+    UNION ALL 
+    SELECT 
+      DATEADD(DAY,1,CURR_DAY) AS CURR_DAY, 
+      CEILING(DATEPART(DAY,CURR_DAY)/7)+ 1 AS WEEK_OF_MONTH 
+    FROM 
+      NOVEMBER_DAYS 
+    WHERE 
+      CURR_DAY < '2023-11-30'
+  ), 
+  FRIDAYS AS (
+    SELECT 
+      CURR_DAY AS PURCHASE_DATE,
+      WEEK_OF_MONTH
+    FROM 
+      NOVEMBER_DAYS 
+    WHERE 
+      DATENAME(WEEKDAY, CURR_DAY)= 'Friday'
+  ), 
+  MEMBERSHIPS AS (
+    SELECT 'Premium' AS MEMBERSHIP 
+    UNION ALL 
+    SELECT 'VIP'  AS MEMBERSHIP
+  ) 
+SELECT 
+  F.WEEK_OF_MONTH, 
+  M.MEMBERSHIP, 
+  ISNULL(SUM(P.AMOUNT_SPEND), 0) AS TOTAL_AMOUNT 
+FROM 
+  FRIDAYS F CROSS 
+  JOIN MEMBERSHIPS M 
+  LEFT JOIN USERS U ON M.MEMBERSHIP = U.MEMBERSHIP 
+  LEFT JOIN PURCHASES P ON F.PURCHASE_DATE = P.PURCHASE_DATE 
+  AND U.USER_ID = P.USER_ID 
+GROUP BY 
+  F.WEEK_OF_MONTH, 
+  M.MEMBERSHIP 
+ORDER BY 
+  F.WEEK_OF_MONTH, 
+  M.MEMBERSHIP;
 ```
 
 # [3124. Find Longest Calls](https://leetcode.com/problems/find-longest-calls/)
