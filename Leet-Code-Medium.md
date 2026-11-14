@@ -10060,21 +10060,98 @@ ORDER BY TOTAL_COST DESC, PIZZA ASC;
 ```
 
 # [3054. Binary Tree Nodes](https://leetcode.com/problems/binary-tree-nodes/)
+```
+Table: Tree
++-------------+------+ 
+| Column Name | Type | 
++-------------+------+ 
+| N           | int  | 
+| P           | int  |
++-------------+------+
+N is the column of unique values for this table.
+Each row includes N and P, where N represents the value of a node in Binary Tree, and P is the parent of N.
+
+Write a solution to find the node type of the Binary Tree. Output one of the following for each node:
+
+- Root: if the node is the root node.
+- Leaf: if the node is the leaf node.
+- Inner: if the node is neither root nor leaf node.
+Return the result table ordered by node value in ascending order.
+
+The result format is in the following example.
+
+Example 1:
+
+Input: 
+Tree table:
++---+------+
+| N | P    | 
++---+------+
+| 1 | 2    |
+| 3 | 2    | 
+| 6 | 8    | 
+| 9 | 8    | 
+| 2 | 5    | 
+| 8 | 5    | 
+| 5 | null | 
++---+------+
+Output: 
++---+-------+
+| N | Type  | 
++---+-------+
+| 1 | Leaf  | 
+| 2 | Inner |
+| 3 | Leaf  |
+| 5 | Root  |
+| 6 | Leaf  |
+| 8 | Inner |
+| 9 | Leaf  |    
++---+-------+
+Explanation: 
+- Node 5 is the root node since it has no parent node.
+- Nodes 1, 3, 6, and 9 are leaf nodes because they don't have any child nodes.
+- Nodes 2, and 8 are inner nodes as they serve as parents to some of the nodes in the structure.
+```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS TREE;
+GO
+CREATE TABLE TREE (
+    N INT,
+    P INT NULL
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO TREE VALUES
+(1, 2),
+(3, 2),
+(6, 8),
+(9, 8),
+(2, 5),
+(8, 5),
+(5, NULL);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM TREE ORDER BY N;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
 SELECT DISTINCT
     T1.N AS N,
     CASE
-        -- A node is a 'ROOT' if it has no parent (its parent column 'P' is NULL).
         WHEN T1.P IS NULL THEN 'Root'
-        -- A node is a 'LEAF' if it has a parent but no children (no matching 'N' in the T2 parent column).
-        WHEN T2.P IS NULL THEN 'Leaf'
-        -- A node is an 'INNER' node if it has both a parent and at least one child.
+        WHEN T2.N IS NULL THEN 'Leaf'
         ELSE 'Inner'
     END AS TYPE
 FROM
     TREE AS T1
-    -- Performs a LEFT JOIN to check if each node (T1.N) exists as a parent (T2.P) to another node.
-    -- This allows us to identify nodes that have children.
     LEFT JOIN TREE AS T2 ON T1.N = T2.P
 ORDER BY
     N;
