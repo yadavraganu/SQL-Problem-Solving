@@ -5694,7 +5694,81 @@ ORDER BY TEAM_ID, EMPLOYEE_ID;
 ```
 
 # [1907. Count Salary Categories](https://leetcode.com/problems/count-salary-categories/)
+```
+Table: Accounts
++-------------+------+
+| Column Name | Type |
++-------------+------+
+| account_id  | int  |
+| income      | int  |
++-------------+------+
+account_id is the primary key (column with unique values) for this table.
+Each row contains information about the monthly income for one bank account.
+
+Write a solution to calculate the number of bank accounts for each salary category. The salary categories are:
+
+- "Low Salary": All the salaries strictly less than $20000.
+- "Average Salary": All the salaries in the inclusive range [$20000, $50000].
+- "High Salary": All the salaries strictly greater than $50000.
+The result table must contain all three categories. If there are no accounts in a category, return 0.
+
+Return the result table in any order.
+
+The result format is in the following example.
+
+Example 1:
+
+Input: 
+Accounts table:
++------------+--------+
+| account_id | income |
++------------+--------+
+| 3          | 108939 |
+| 2          | 12747  |
+| 8          | 87709  |
+| 6          | 91796  |
++------------+--------+
+Output: 
++----------------+----------------+
+| category       | accounts_count |
++----------------+----------------+
+| Low Salary     | 1              |
+| Average Salary | 0              |
+| High Salary    | 3              |
++----------------+----------------+
+Explanation: 
+Low Salary: Account 2.
+Average Salary: No accounts.
+High Salary: Accounts 3, 6, and 8.
+```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS ACCOUNTS;
+GO
+CREATE TABLE ACCOUNTS (
+    ACCOUNT_ID INT,
+    INCOME INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO ACCOUNTS VALUES
+(3, 108939),
+(2, 12747),
+(8, 87709),
+(6, 91796);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM ACCOUNTS ORDER BY ACCOUNT_ID;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
 SELECT
   'Low Salary' AS CATEGORY,
   SUM(CASE WHEN INCOME < 20000 THEN 1 ELSE 0 END) AS ACCOUNTS_COUNT
@@ -5709,6 +5783,30 @@ SELECT
   'High Salary' AS CATEGORY,
   SUM(CASE WHEN INCOME > 50000 THEN 1 ELSE 0 END) AS ACCOUNTS_COUNT
 FROM ACCOUNTS;
+--------------------------------------------------------------------------------------
+WITH CATEGORIES AS (
+    SELECT 'Low Salary' AS CATEGORY
+    UNION ALL
+    SELECT 'Average Salary'
+    UNION ALL
+    SELECT 'High Salary'
+),
+CATEGORIZED_ACCOUNTS AS (
+    SELECT
+        CASE
+            WHEN INCOME < 20000 THEN 'Low Salary'
+            WHEN INCOME BETWEEN 20000 AND 50000 THEN 'Average Salary'
+            ELSE 'High Salary'
+        END AS CATEGORY
+    FROM ACCOUNTS
+)
+SELECT
+    C.CATEGORY,
+    COUNT(A.CATEGORY) AS ACCOUNTS_COUNT
+FROM CATEGORIES C
+LEFT JOIN CATEGORIZED_ACCOUNTS A
+    ON C.CATEGORY = A.CATEGORY
+GROUP BY C.CATEGORY;
 ```
 
 # [1934. Confirmation Rate](https://leetcode.com/problems/confirmation-rate/)
