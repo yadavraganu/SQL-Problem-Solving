@@ -9252,14 +9252,99 @@ ORDER BY USER_ID, STEPS_DATE;
 ```
 
 # [2893. Calculate Orders Within Each Interval](https://leetcode.com/problems/calculate-orders-within-each-interval/)
+```
+Table: Orders
++-------------+------+ 
+| Column Name | Type | 
++-------------+------+ 
+| minute      | int  | 
+| order_count | int  |
++-------------+------+
+minute is the primary key for this table.
+Each row of this table contains the minute and number of orders received during that specific minute. The total number of rows will be a multiple of 6.
+
+Write a query to calculate total orders within each interval. Each interval is defined as a combination of 6 minutes.
+
+Minutes 1 to 6 fall within interval 1, while minutes 7 to 12 belong to interval 2, and so forth.
+Return the result table ordered by interval_no in ascending order.
+
+The result format is in the following example.
+
+Example 1:
+
+Input: 
+Orders table:
++--------+-------------+
+| minute | order_count | 
++--------+-------------+
+| 1      | 0           |
+| 2      | 2           | 
+| 3      | 4           | 
+| 4      | 6           | 
+| 5      | 1           | 
+| 6      | 4           | 
+| 7      | 1           | 
+| 8      | 2           | 
+| 9      | 4           | 
+| 10     | 1           | 
+| 11     | 4           | 
+| 12     | 6           | 
++--------+-------------+
+Output: 
++-------------+--------------+
+| interval_no | total_orders | 
++-------------+--------------+
+| 1           | 17           | 
+| 2           | 18           |    
++-------------+--------------+
+Explanation: 
+- Interval number 1 comprises minutes from 1 to 6. The total orders in these six minutes are (0 + 2 + 4 + 6 + 1 + 4) = 17.
+- Interval number 2 comprises minutes from 7 to 12. The total orders in these six minutes are (1 + 2 + 4 + 1 + 4 + 6) = 18.
+Returning table orderd by interval_no in ascending order.
+```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS ORDERS;
+GO
+CREATE TABLE ORDERS (
+    MINUTE INT,
+    ORDER_COUNT INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO ORDERS VALUES
+(1, 0),
+(2, 2),
+(3, 4),
+(4, 6),
+(5, 1),
+(6, 4),
+(7, 1),
+(8, 2),
+(9, 4),
+(10, 1),
+(11, 4),
+(12, 6);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM ORDERS ORDER BY MINUTE;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
 SELECT
-    CEILING(CAST([MINUTE] AS FLOAT) / 6) AS INTERVAL_NO,
+    CEILING(MINUTE*1.0 / 6) AS INTERVAL_NO,
     SUM(ORDER_COUNT) AS TOTAL_ORDERS
 FROM
     ORDERS
 GROUP BY
-    CEILING(CAST([MINUTE] AS FLOAT) / 6)
+    CEILING(MINUTE*1.0 / 6)
 ORDER BY
     INTERVAL_NO;
 ```
