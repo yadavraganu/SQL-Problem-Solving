@@ -3802,33 +3802,140 @@ ORDER BY
 ```
 
 # [1555. Bank Account Summary](https://leetcode.com/problems/bank-account-summary/)
+```
+Table: Users
++--------------+---------+
+| Column Name  | Type    |
++--------------+---------+
+| user_id      | int     |
+| user_name    | varchar |
+| credit       | int     |
++--------------+---------+
+user_id is the primary key (column with unique values) for this table.
+Each row of this table contains the current credit information for each user.
+
+Table: Transactions
++---------------+---------+
+| Column Name   | Type    |
++---------------+---------+
+| trans_id      | int     |
+| paid_by       | int     |
+| paid_to       | int     |
+| amount        | int     |
+| transacted_on | date    |
++---------------+---------+
+trans_id is the primary key (column with unique values) for this table.
+Each row of this table contains information about the transaction in the bank.
+User with id (paid_by) transfer money to user with id (paid_to).
+
+Leetcode Bank (LCB) helps its coders in making virtual payments. Our bank records all transactions in the table Transaction,  
+we want to find out the current balance of all users and check whether they have breached their credit limit  
+(If their current credit is less than 0).
+
+Write a solution to report. 
+- user_id,
+- user_name,
+- credit, current balance after performing transactions, and
+- credit_limit_breached, check credit_limit ("Yes" or "No")
+
+Return the result table in any order.
+
+The result format is in the following example.
+
+Example 1:
+
+Input: 
+Users table:
++------------+--------------+-------------+
+| user_id    | user_name    | credit      |
++------------+--------------+-------------+
+| 1          | Moustafa     | 100         |
+| 2          | Jonathan     | 200         |
+| 3          | Winston      | 10000       |
+| 4          | Luis         | 800         | 
++------------+--------------+-------------+
+Transactions table:
++------------+------------+------------+----------+---------------+
+| trans_id   | paid_by    | paid_to    | amount   | transacted_on |
++------------+------------+------------+----------+---------------+
+| 1          | 1          | 3          | 400      | 2020-08-01    |
+| 2          | 3          | 2          | 500      | 2020-08-02    |
+| 3          | 2          | 1          | 200      | 2020-08-03    |
++------------+------------+------------+----------+---------------+
+Output: 
++------------+------------+------------+-----------------------+
+| user_id    | user_name  | credit     | credit_limit_breached |
++------------+------------+------------+-----------------------+
+| 1          | Moustafa   | -100       | Yes                   | 
+| 2          | Jonathan   | 500        | No                    |
+| 3          | Winston    | 9900       | No                    |
+| 4          | Luis       | 800        | No                    |
++------------+------------+------------+-----------------------+
+Explanation: 
+Moustafa paid $400 on "2020-08-01" and received $200 on "2020-08-03", credit (100 -400 +200) = -$100
+Jonathan received $500 on "2020-08-02" and paid $200 on "2020-08-08", credit (200 +500 -200) = $500
+Winston received $400 on "2020-08-01" and paid $500 on "2020-08-03", credit (10000 +400 -500) = $9990
+Luis did not received any transfer, credit = $800
+```
 ```sql
-WITH UPDATEDUSERS AS (
-    SELECT
-      USERS.USER_ID,
-      USERS.USER_NAME,
-      USERS.CREDIT + ISNULL(SUM(
-        CASE
-          WHEN USERS.USER_ID = TRANSACTIONS.PAID_BY THEN -TRANSACTIONS.AMOUNT
-          WHEN USERS.USER_ID = TRANSACTIONS.PAID_TO THEN TRANSACTIONS.AMOUNT
-          ELSE 0
-        END
-      ), 0) AS CREDIT
-    FROM USERS
-    LEFT JOIN TRANSACTIONS
-      ON (USERS.USER_ID IN (TRANSACTIONS.PAID_BY, TRANSACTIONS.PAID_TO))
-    GROUP BY
-      USERS.USER_ID,
-      USERS.USER_NAME,
-      USERS.CREDIT
-)
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS TRANSACTIONS;
+DROP TABLE IF EXISTS USERS;
+GO
+CREATE TABLE USERS (
+    USER_ID INT,
+    USER_NAME VARCHAR(50),
+    CREDIT INT
+);
+GO
+CREATE TABLE TRANSACTIONS (
+    TRANS_ID INT,
+    PAID_BY INT,
+    PAID_TO INT,
+    AMOUNT INT,
+    TRANSACTED_ON DATE
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO USERS VALUES
+(1, 'Moustafa', 100),
+(2, 'Jonathan', 200),
+(3, 'Winston', 10000),
+(4, 'Luis', 800);
+GO
+INSERT INTO TRANSACTIONS VALUES
+(1, 1, 3, 400, '2020-08-01'),
+(2, 3, 2, 500, '2020-08-02'),
+(3, 2, 1, 200, '2020-08-03');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM USERS ORDER BY USER_ID;
+SELECT * FROM TRANSACTIONS ORDER BY TRANS_ID;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
 SELECT
-  *,
-  CASE
-    WHEN CREDIT < 0 THEN 'yes'
-    ELSE 'no'
-  END AS CREDIT_LIMIT_BREACHED
-FROM UPDATEDUSERS;
+    T.USER_ID,
+    USER_NAME,
+    SUM(T.CREDIT) AS CREDIT,
+    IIF(SUM(T.CREDIT) < 0, 'Yes', 'No') AS CREDIT_LIMIT_BREACHED
+FROM (
+    SELECT PAID_BY AS USER_ID, -AMOUNT AS CREDIT FROM TRANSACTIONS
+    UNION ALL
+    SELECT PAID_TO AS USER_ID, AMOUNT AS CREDIT FROM TRANSACTIONS
+    UNION ALL
+    SELECT USER_ID, CREDIT FROM USERS
+) AS T
+LEFT JOIN USERS AS U ON T.USER_ID = U.USER_ID
+GROUP BY T.USER_ID,USER_NAME
+ORDER BY 1;
 ```
 
 # [1596. The Most Frequently Ordered Products for Each Customer](https://leetcode.com/problems/the-most-frequently-ordered-products-for-each-customer/)
