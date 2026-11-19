@@ -11154,47 +11154,125 @@ ORDER BY
 ```
 
 # [3089. Find Bursty Behavior](https://leetcode.com/problems/find-bursty-behavior/)
+```
+Table: Posts
++-------------+---------+
+| Column Name | Type    |
++-------------+---------+
+| post_id     | int     |
+| user_id     | int     |
+| post_date   | date    |
++-------------+---------+
+post_id is the primary key (column with unique values) for this table.
+Each row of this table contains post_id, user_id, and post_date.
+
+Write a solution to find users who demonstrate bursty behavior in their posting patterns during February 2024.  
+Bursty behavior is defined as any period of 7 consecutive days where a user's posting frequency is at least twice  
+to their average weekly posting frequency for February 2024.
+
+Note: Only include the dates from February 1 to February 28 in your analysis, which means you should count February as having exactly 4 weeks.
+
+Return the result table orderd by user_id in ascending order.
+
+The result format is in the following example.
+
+Example:
+
+Input:
+Posts table:
++---------+---------+------------+
+| post_id | user_id | post_date  |
++---------+---------+------------+
+| 1       | 1       | 2024-02-27 |
+| 2       | 5       | 2024-02-06 |
+| 3       | 3       | 2024-02-25 |
+| 4       | 3       | 2024-02-14 |
+| 5       | 3       | 2024-02-06 |
+| 6       | 2       | 2024-02-25 |
++---------+---------+------------+
+Output:
++---------+----------------+------------------+
+| user_id | max_7day_posts | avg_weekly_posts |
++---------+----------------+------------------+
+| 1       | 1              | 0.2500           |
+| 2       | 1              | 0.2500           |
+| 5       | 1              | 0.2500           |
++---------+----------------+------------------+
+Explanation:
+User 1: Made only 1 post in February, resulting in an average of 0.25 posts per week and a max of 1 post in any 7-day period.
+User 2: Also made just 1 post, with the same average and max 7-day posting frequency as User 1.
+User 5: Like Users 1 and 2, User 5 made only 1 post throughout February, leading to the same average and max 7-day posting metrics.
+User 3: Although User 3 made more posts than the others (3 posts), they did not reach twice the average weekly posts in their consecutive 7-day window, so they are not listed in the output.
+Note: Output table is ordered by user_id in ascending order.
+```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS POSTS;
+GO
+CREATE TABLE POSTS (
+    POST_ID INT,
+    USER_ID INT,
+    POST_DATE DATE
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO POSTS VALUES
+(1, 1, '2024-02-27'),
+(2, 5, '2024-02-06'),
+(3, 3, '2024-02-25'),
+(4, 3, '2024-02-14'),
+(5, 3, '2024-02-06'),
+(6, 2, '2024-02-25');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM POSTS ORDER BY POST_ID;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
 WITH SEVENDAYPOSTCOUNTS AS (
   SELECT 
-    POST1.USER_ID, 
+    POST1.USER_ID,
+    POST1.POST_ID,
     COUNT(*) AS POST_COUNT 
   FROM 
     POSTS AS POST1 
     INNER JOIN POSTS AS POST2 ON POST1.USER_ID = POST2.USER_ID 
   WHERE 
-    POST2.POST_DATE BETWEEN POST1.POST_DATE 
-    AND DATEADD(DAY, 6, POST1.POST_DATE) 
+    POST2.POST_DATE BETWEEN POST1.POST_DATE AND DATEADD(DAY, 6, POST1.POST_DATE) 
   GROUP BY 
-    POST1.USER_ID, 
-    POST1.POST_ID
+    POST1.USER_ID,POST1.POST_ID
 ), 
 AVERAGEWEEKLYPOSTS AS (
   SELECT 
     USER_ID, 
-    COUNT(*) / 4 AS AVG_WEEKLY_POSTS 
+    COUNT(*)*1.0 / 4 AS AVG_WEEKLY_POSTS 
   FROM 
     POSTS 
   WHERE 
-    POST_DATE BETWEEN '2024-02-01' 
-    AND '2024-02-28' 
+    POST_DATE BETWEEN '2024-02-01' AND '2024-02-28' 
   GROUP BY 
     USER_ID
 ) 
 SELECT 
-  SEVENDAYPOSTCOUNTS.USER_ID, 
-  MAX(SEVENDAYPOSTCOUNTS.POST_COUNT) AS MAX_7DAY_POSTS, 
-  AVERAGEWEEKLYPOSTS.AVG_WEEKLY_POSTS 
+  SDPC.USER_ID, 
+  MAX(SDPC.POST_COUNT) AS MAX_7DAY_POSTS, 
+  AWP.AVG_WEEKLY_POSTS 
 FROM 
-  SEVENDAYPOSTCOUNTS 
-  INNER JOIN AVERAGEWEEKLYPOSTS ON SEVENDAYPOSTCOUNTS.USER_ID = AVERAGEWEEKLYPOSTS.USER_ID 
+  SEVENDAYPOSTCOUNTS SDPC
+  INNER JOIN AVERAGEWEEKLYPOSTS AWP ON SDPC.USER_ID = AWP.USER_ID 
 GROUP BY 
-  SEVENDAYPOSTCOUNTS.USER_ID, 
-  AVERAGEWEEKLYPOSTS.AVG_WEEKLY_POSTS 
+  SDPC.USER_ID,AWP.AVG_WEEKLY_POSTS 
 HAVING 
-  MAX(SEVENDAYPOSTCOUNTS.POST_COUNT) >= AVERAGEWEEKLYPOSTS.AVG_WEEKLY_POSTS * 2 
+  MAX(SDPC.POST_COUNT) >= AWP.AVG_WEEKLY_POSTS * 2 
 ORDER BY 
-  SEVENDAYPOSTCOUNTS.USER_ID;
+  SDPC.USER_ID;
 ```
 
 # [3118. Friday Purchase III](https://leetcode.com/problems/friday-purchase-iii/)
