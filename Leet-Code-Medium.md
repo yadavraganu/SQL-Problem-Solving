@@ -3801,6 +3801,10 @@ ORDER BY
   ORDER_DATE DESC;
 ```
 
+# [1549. The Most Recent Orders for Each Product](https://leetcode.com/problems/the-most-recent-orders-for-each-product/)
+```sql
+```
+
 # [1555. Bank Account Summary](https://leetcode.com/problems/bank-account-summary/)
 ```
 Table: Users
@@ -15442,6 +15446,10 @@ WHERE
 ORDER BY 6 DESC, 2 ASC
 ```
 
+# [3642. Find Books with Polarized Opinions](https://leetcode.com/problems/find-books-with-polarized-opinions/)
+```sql
+```
+
 # [3657. Find Loyal Customers](https://leetcode.com/problems/find-loyal-customers/)
 ```
 Table: customer_transactions
@@ -15916,6 +15924,10 @@ WHERE
       MONTHLY_AMOUNT * 1.0 / MAX_HISTORICAL_AMOUNT
     ) < 0.5
   ) ORDER BY 5 DESC;
+```
+
+# [3808. Find Emotionally Consistent Users](https://leetcode.com/problems/find-emotionally-consistent-users/)
+```sql
 ```
 
 # [534. Game Play Analysis III](https://leetcode.com/problems/game-play-analysis-iii/)
