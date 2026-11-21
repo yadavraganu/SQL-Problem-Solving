@@ -5071,28 +5071,70 @@ FROM
 
 # [613. Shortest Distance in a Line](https://leetcode.com/problems/shortest-distance-in-a-line/)
 ```
-Table point holds the x coordinate of some points on x-axis in a plane, which are all integers.
-Write a query to find the shortest distance between two points in these points.
+Table: Point
++-------------+------+
+| Column Name | Type |
++-------------+------+
+| x           | int  |
++-------------+------+
+In SQL, x is the primary key column for this table.
+Each row of this table indicates the position of a point on the X-axis.
 
-| x   |
-|-----|
-| -1  |
-| 0   |
-| 2   |
- 
-The shortest distance is '1' obviously, which is from point '-1' to '0'. So the output is as below:
+Find the shortest distance between any two points from the Point table.
 
-| shortest|
-|---------|
-| 1       |
+It is guaranteed that the Point table contains at least two rows.
 
-Note: Every point is unique, which means there is no duplicates in table point.
+The result format is in the following example.
+
+Example 1:
+
+Input: 
+Point table:
++----+
+| x  |
++----+
+| -1 |
+| 0  |
+| 2  |
++----+
+Output: 
++----------+
+| shortest |
++----------+
+| 1        |
++----------+
+Explanation: The shortest distance is between points -1 and 0 which is |(-1) - 0| = 1.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS POINT;
+GO
+CREATE TABLE POINT (
+    X INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO POINT VALUES
+(-1),
+(0),
+(2);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM POINT ORDER BY X;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
 SELECT MIN(P2.X - P1.X) AS SHORTEST
-FROM
-    POINT AS P1
-    JOIN POINT AS P2 ON P1.X < P2.X
+FROM 
+POINT AS P1
+INNER JOIN POINT AS P2 ON P1.X < P2.X
 ```
 
 # [619. Biggest Single Number](https://leetcode.com/problems/biggest-single-number/)
@@ -5158,20 +5200,46 @@ Output:
 Explanation: There are no single numbers in the input table so we return null.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS MYNUMBERS;
+GO
+CREATE TABLE MYNUMBERS (
+    NUM INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO MYNUMBERS VALUES
+(8),
+(8),
+(3),
+(3),
+(1),
+(4),
+(5),
+(6);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM MYNUMBERS;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
 WITH CTE AS (
   SELECT 
     NUM,COUNT(NUM) COUNTED 
-  FROM 
-    MYNUMBERS 
-  GROUP BY 
-    NUM 
-  HAVING 
-    COUNT(NUM) = 1
+  FROM MYNUMBERS 
+  GROUP BY NUM 
+  HAVING COUNT(NUM) = 1
 ) 
 SELECT 
   ISNULL(MAX(NUM), NULL) NUM 
-FROM 
-  CTE
+FROM CTE
 ```
 
 # [620. Not Boring Movies](https://leetcode.com/problems/not-boring-movies/)
@@ -5218,7 +5286,40 @@ Explanation:
 We have three movies with odd-numbered IDs: 1, 3, and 5. The movie with ID = 3 is boring so we do not include it in the answer.
 ```
 ```sql
-SELECT ID, MOVIE, DESCRIPTION, RATING FROM CINEMA WHERE DESCRIPTION <> 'boring' AND ID % 2 = 1 ORDER BY RATING DESC
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS CINEMA;
+GO
+CREATE TABLE CINEMA (
+    ID INT,
+    MOVIE VARCHAR(100),
+    DESCRIPTION VARCHAR(100),
+    RATING DECIMAL(3,1)
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO CINEMA VALUES
+(1, 'War', 'great 3D', 8.9),
+(2, 'Science', 'fiction', 8.5),
+(3, 'irish', 'boring', 6.2),
+(4, 'Ice song', 'Fantacy', 8.6),
+(5, 'House card', 'Interesting', 9.1);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM CINEMA ORDER BY ID;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
+SELECT ID, MOVIE, DESCRIPTION, RATING 
+FROM CINEMA 
+WHERE DESCRIPTION <> 'boring' AND ID % 2 = 1 
+ORDER BY RATING DESC
 ```
 # [627. Swap Sex of Employees](https://leetcode.com/problems/swap-sex-of-employees/)
 ```
@@ -5298,16 +5399,3 @@ GO
 *******************************************************************************/
 UPDATE SALARY SET SEX = CASE WHEN SEX = 'm' THEN 'f' ELSE 'm' END;
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
