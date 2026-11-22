@@ -4823,40 +4823,116 @@ HAVING COUNT(STUDENT) >= 5;
 
 # [597. Friend Requests I: Overall Acceptance Rate](https://leetcode.com/problems/friend-requests-i-overall-acceptance-rate/)
 ```
-In social network like Facebook or Twitter, people send friend requests and accept others’ requests as well. Now given two tables as below:
+Table: FriendRequest
++----------------+---------+
+| Column Name    | Type    |
++----------------+---------+
+| sender_id      | int     |
+| send_to_id     | int     |
+| request_date   | date    |
++----------------+---------+
+This table may contain duplicates (In other words, there is no primary key for this table in SQL).
+This table contains the ID of the user who sent the request, the ID of the user who received the request, and the date of the request.
 
-Table: friend_request
-| sender_id | send_to_id |request_date|
-|-----------|------------|------------|
-| 1         | 2          | 2016_06-01 |
-| 1         | 3          | 2016_06-01 |
-| 1         | 4          | 2016_06-01 |
-| 2         | 3          | 2016_06-02 |
-| 3         | 4          | 2016-06-09 |
+Table: RequestAccepted
++----------------+---------+
+| Column Name    | Type    |
++----------------+---------+
+| requester_id   | int     |
+| accepter_id    | int     |
+| accept_date    | date    |
++----------------+---------+
+This table may contain duplicates (In other words, there is no primary key for this table in SQL).
+This table contains the ID of the user who sent the request, the ID of the user who received the request, and the date when  
+the request was accepted.
 
-Table: request_accepted
-| requester_id | accepter_id |accept_date |
-|--------------|-------------|------------|
-| 1            | 2           | 2016_06-03 |
-| 1            | 3           | 2016-06-08 |
-| 2            | 3           | 2016-06-08 |
-| 3            | 4           | 2016-06-09 |
-| 3            | 4           | 2016-06-10 |
- 
-Write a query to find the overall acceptance rate of requests rounded to 2 decimals, which is the number of acceptance divide the number of requests.
-For the sample data above, your query should return the following result.
+Find the overall acceptance rate of requests, which is the number of acceptance divided by the number of requests. Return  
+the answer rounded to 2 decimals places.
 
-|accept_rate|
-|-----------|
-|       0.80|
- 
-Note:
-The accepted requests are not necessarily from the table friend_request. In this case, you just need to simply count the total accepted requests (no matter whether they are in the original requests), and divide it by the number of requests to get the acceptance rate.
-It is possible that a sender sends multiple requests to the same receiver, and a request could be accepted more than once. In this case, the ‘duplicated’ requests or acceptances are only counted once.
-If there is no requests at all, you should return 0.00 as the accept_rate.
-Explanation: There are 4 unique accepted requests, and there are 5 requests in total. So the rate is 0.80.
+Note that:
+
+- The accepted requests are not necessarily from the table friend_request. In this case, Count the total accepted requests (no matter whether they are in the original requests), and divide it by the number of requests to get the acceptance rate.
+- It is possible that a sender sends multiple requests to the same receiver, and a request could be accepted more than once. In this case, the ‘duplicated’ requests or acceptances are only counted once.
+- If there are no requests at all, you should return 0.00 as the accept_rate.
+The result format is in the following example.
+
+Example 1:
+
+Input: 
+FriendRequest table:
++-----------+------------+--------------+
+| sender_id | send_to_id | request_date |
++-----------+------------+--------------+
+| 1         | 2          | 2016/06/01   |
+| 1         | 3          | 2016/06/01   |
+| 1         | 4          | 2016/06/01   |
+| 2         | 3          | 2016/06/02   |
+| 3         | 4          | 2016/06/09   |
++-----------+------------+--------------+
+RequestAccepted table:
++--------------+-------------+-------------+
+| requester_id | accepter_id | accept_date |
++--------------+-------------+-------------+
+| 1            | 2           | 2016/06/03  |
+| 1            | 3           | 2016/06/08  |
+| 2            | 3           | 2016/06/08  |
+| 3            | 4           | 2016/06/09  |
+| 3            | 4           | 2016/06/10  |
++--------------+-------------+-------------+
+Output: 
++-------------+
+| accept_rate |
++-------------+
+| 0.8         |
++-------------+
+Explanation: 
+There are 4 unique accepted requests, and there are 5 requests in total. So the rate is 0.80.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS REQUESTACCEPTED;
+DROP TABLE IF EXISTS FRIENDREQUEST;
+GO
+CREATE TABLE FRIENDREQUEST (
+    SENDER_ID INT,
+    SEND_TO_ID INT,
+    REQUEST_DATE DATE
+);
+GO
+CREATE TABLE REQUESTACCEPTED (
+    REQUESTER_ID INT,
+    ACCEPTER_ID INT,
+    ACCEPT_DATE DATE
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO FRIENDREQUEST VALUES
+(1, 2, '2016-06-01'),
+(1, 3, '2016-06-01'),
+(1, 4, '2016-06-01'),
+(2, 3, '2016-06-02'),
+(3, 4, '2016-06-09');
+GO
+INSERT INTO REQUESTACCEPTED VALUES
+(1, 2, '2016-06-03'),
+(1, 3, '2016-06-08'),
+(2, 3, '2016-06-08'),
+(3, 4, '2016-06-09'),
+(3, 4, '2016-06-10');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM FRIENDREQUEST;
+SELECT * FROM REQUESTACCEPTED;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
 SELECT
     ROUND(
         ISNULL(
@@ -4870,29 +4946,73 @@ SELECT
 
 # [603. Consecutive Available Seats](https://leetcode.com/problems/consecutive-available-seats/)
 ```
-Several friends at a cinema ticket office would like to reserve consecutive available seats.
-Can you help to query all the consecutive available seats order by the seat_id using the following cinema table?
+Table: Cinema
++-------------+------+
+| Column Name | Type |
++-------------+------+
+| seat_id     | int  |
+| free        | bool |
++-------------+------+
+seat_id is an auto-increment column for this table.
+Each row of this table indicates whether the ith seat is free or not. 1 means free while 0 means occupied.
+
+Find all the consecutive available seats in the cinema.
+
+Return the result table ordered by seat_id in ascending order.
+The test cases are generated so that more than two seats are consecutively available.
+The result format is in the following example.
+
+Example 1:
+
+Input: 
+Cinema table:
++---------+------+
 | seat_id | free |
-|---------|------|
++---------+------+
 | 1       | 1    |
 | 2       | 0    |
 | 3       | 1    |
 | 4       | 1    |
 | 5       | 1    |
- 
-Your query should return the following result for the sample case above.
-
++---------+------+
+Output: 
++---------+
 | seat_id |
-|---------|
++---------+
 | 3       |
 | 4       |
 | 5       |
-
-Note:
-The seat_id is an auto increment int, and free is bool ('1' means free, and '0' means occupied.).
-Consecutive available seats are more than 2(inclusive) seats consecutively available.
++---------+
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS CINEMA;
+GO
+CREATE TABLE CINEMA (
+    SEAT_ID INT,
+    FREE BIT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO CINEMA VALUES
+(1, 1),
+(2, 0),
+(3, 1),
+(4, 1),
+(5, 1);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM CINEMA ORDER BY SEAT_ID;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
 WITH CINEMANEIGHBORS AS (
   SELECT
     *,
@@ -5014,6 +5134,67 @@ Explanation:
 According to orders 3 and 4 in the Orders table, it is easy to tell that only salesperson John and Pam have sales to company RED, so we report all the other names in the table salesperson.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS ORDERS;
+DROP TABLE IF EXISTS COMPANY;
+DROP TABLE IF EXISTS SALESPERSON;
+GO
+CREATE TABLE SALESPERSON (
+    SALES_ID INT,
+    NAME VARCHAR(50),
+    SALARY INT,
+    COMMISSION_RATE INT,
+    HIRE_DATE DATE
+);
+GO
+CREATE TABLE COMPANY (
+    COM_ID INT,
+    NAME VARCHAR(50),
+    CITY VARCHAR(50)
+);
+GO
+CREATE TABLE ORDERS (
+    ORDER_ID INT,
+    ORDER_DATE DATE,
+    COM_ID INT,
+    SALES_ID INT,
+    AMOUNT INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO SALESPERSON VALUES
+(1, 'John', 100000, 6, '2006-04-01'),
+(2, 'Amy', 12000, 5, '2010-05-01'),
+(3, 'Mark', 65000, 12, '2008-12-25'),
+(4, 'Pam', 25000, 25, '2005-01-01'),
+(5, 'Alex', 5000, 10, '2007-02-03');
+GO
+INSERT INTO COMPANY VALUES
+(1, 'RED', 'Boston'),
+(2, 'ORANGE', 'New York'),
+(3, 'YELLOW', 'Boston'),
+(4, 'GREEN', 'Austin');
+GO
+INSERT INTO ORDERS VALUES
+(1, '2014-01-01', 3, 4, 10000),
+(2, '2014-02-01', 4, 5, 5000),
+(3, '2014-03-01', 1, 1, 50000),
+(4, '2014-04-01', 1, 4, 25000);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM SALESPERSON ORDER BY SALES_ID;
+SELECT * FROM COMPANY ORDER BY COM_ID;
+SELECT * FROM ORDERS ORDER BY ORDER_ID;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
 SELECT S.NAME
 FROM ORDERS O
 INNER JOIN COMPANY C
