@@ -4644,8 +4644,8 @@ In SQL, id is the primary key column for this table.
 Each row of this table indicates the id of a customer, their name, and the id of the customer who referred them.
  
 Find the names of the customer that are either:
-referred by any customer with id != 2.
-not referred by any customer.
+- referred by any customer with id != 2.
+- not referred by any customer.
 Return the result table in any order.
 The result format is in the following example.
 Example 1:
@@ -4673,6 +4673,36 @@ Output:
 +------+
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS CUSTOMER;
+GO
+CREATE TABLE CUSTOMER (
+    ID INT,
+    NAME VARCHAR(50),
+    REFEREE_ID INT NULL
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO CUSTOMER VALUES
+(1, 'Will', NULL),
+(2, 'Jane', NULL),
+(3, 'Alex', 2),
+(4, 'Bill', NULL),
+(5, 'Zack', 1),
+(6, 'Mark', 2);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM CUSTOMER ORDER BY ID;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
 SELECT NAME FROM CUSTOMER WHERE REFEREE_ID <> '2' OR REFEREE_ID IS NULL
 ```
 
@@ -4715,10 +4745,50 @@ The customer with number 3 has two orders, which is greater than either customer
 So the result is customer_number 3.
 ```
 ```sql
-SELECT TOP 1 CUSTOMER_NUMBER
-FROM ORDERS
-GROUP BY CUSTOMER_NUMBER
-ORDER BY COUNT(*) DESC;
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS ORDERS;
+GO
+CREATE TABLE ORDERS (
+    ORDER_NUMBER INT,
+    CUSTOMER_NUMBER INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO ORDERS VALUES
+(1, 1),
+(2, 2),
+(3, 3),
+(4, 3);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM ORDERS ORDER BY ORDER_NUMBER;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
+WITH 
+  RANKED_CUST AS (
+    SELECT 
+      CUSTOMER_NUMBER,
+      COUNT(*) AS ORDER_COUNT,
+      ROW_NUMBER() OVER (ORDER BY COUNT(*) DESC) AS RNK 
+    FROM 
+      ORDERS 
+    GROUP BY 
+      CUSTOMER_NUMBER
+  ) 
+SELECT 
+  CUSTOMER_NUMBER 
+FROM 
+  RANKED_CUST 
+WHERE 
+  RNK = 1
 ```
 
 # [595. Big Countries](https://leetcode.com/problems/big-countries/)
@@ -4738,8 +4808,8 @@ Each row of this table gives information about the name of a country, the contin
  
 
 A country is big if:
-it has an area of at least three million (i.e., 3000000 km2), or
-it has a population of at least twenty-five million (i.e., 25000000).
+- it has an area of at least three million (i.e., 3000000 km2), or
+- it has a population of at least twenty-five million (i.e., 25000000).
 Write a solution to find the name, population, and area of the big countries.
 Return the result table in any order.
 The result format is in the following example.
@@ -4766,7 +4836,38 @@ Output:
 +-------------+------------+---------+
 ```
 ```sql
-SELECT NAME,POPULATION,AREA FROM WORLD WHERE POPULATION>=25000000 OR AREA>=3000000 
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS WORLD;
+GO
+CREATE TABLE WORLD (
+    NAME VARCHAR(100),
+    CONTINENT VARCHAR(50),
+    AREA INT,
+    POPULATION INT,
+    GDP BIGINT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO WORLD VALUES
+('Afghanistan', 'Asia', 652230, 25500100, 20343000000),
+('Albania', 'Europe', 28748, 2831741, 12960000000),
+('Algeria', 'Africa', 2381741, 37100000, 188681000000),
+('Andorra', 'Europe', 468, 78115, 3712000000),
+('Angola', 'Africa', 1246700, 20609294, 100990000000);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM WORLD;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
+SELECT NAME,POPULATION,AREA FROM WORLD WHERE POPULATION>=25000000 OR AREA>=3000000
 ```
 
 # [596. Classes With at Least 5 Students](https://leetcode.com/problems/classes-with-at-least-5-students/)
@@ -4815,6 +4916,38 @@ Explanation:
 - Computer has 1 student, so we do not include it.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS COURSES;
+GO
+CREATE TABLE COURSES (
+    STUDENT CHAR(1),
+    CLASS VARCHAR(50)
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO COURSES VALUES
+('A', 'Math'),
+('B', 'English'),
+('C', 'Math'),
+('D', 'Biology'),
+('E', 'Math'),
+('F', 'Computer'),
+('G', 'Math'),
+('H', 'Math'),
+('I', 'Math');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM COURSES;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
 SELECT CLASS
 FROM COURSES
 GROUP BY CLASS
