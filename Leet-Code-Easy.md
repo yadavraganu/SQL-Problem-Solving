@@ -4219,6 +4219,7 @@ Table: borrowing_records
 +---------------+---------+
 record_id is the unique identifier for this table.
 Each row represents a borrowing transaction and return_date is NULL if the book is currently borrowed and hasn't been returned yet.
+
 Write a solution to find all books that are currently borrowed (not returned) and have zero copies available in the library.
 
 A book is considered currently borrowed if there exists a borrowing record with a NULL return_date
@@ -4287,6 +4288,61 @@ Result ordering:
 Output table is ordered by current_borrowers in descending order, then by book_title in ascending order.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS BORROWING_RECORDS;
+DROP TABLE IF EXISTS LIBRARY_BOOKS;
+GO
+CREATE TABLE LIBRARY_BOOKS (
+    BOOK_ID INT,
+    TITLE VARCHAR(100),
+    AUTHOR VARCHAR(100),
+    GENRE VARCHAR(50),
+    PUBLICATION_YEAR INT,
+    TOTAL_COPIES INT
+);
+GO
+CREATE TABLE BORROWING_RECORDS (
+    RECORD_ID INT,
+    BOOK_ID INT,
+    BORROWER_NAME VARCHAR(100),
+    BORROW_DATE DATE,
+    RETURN_DATE DATE NULL
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO LIBRARY_BOOKS VALUES
+(1, 'The Great Gatsby', 'F. Scott', 'Fiction', 1925, 3),
+(2, 'To Kill a Mockingbird', 'Harper Lee', 'Fiction', 1960, 3),
+(3, '1984', 'George Orwell', 'Dystopian', 1949, 1),
+(4, 'Pride and Prejudice', 'Jane Austen', 'Romance', 1813, 2),
+(5, 'The Catcher in the Rye', 'J.D. Salinger', 'Fiction', 1951, 1),
+(6, 'Brave New World', 'Aldous Huxley', 'Dystopian', 1932, 4);
+GO
+INSERT INTO BORROWING_RECORDS VALUES
+(1, 1, 'Alice Smith', '2024-01-15', NULL),
+(2, 1, 'Bob Johnson', '2024-01-20', NULL),
+(3, 2, 'Carol White', '2024-01-10', '2024-01-25'),
+(4, 3, 'David Brown', '2024-02-01', NULL),
+(5, 4, 'Emma Wilson', '2024-01-05', NULL),
+(6, 5, 'Frank Davis', '2024-01-18', '2024-02-10'),
+(7, 1, 'Grace Miller', '2024-02-05', NULL),
+(8, 6, 'Henry Taylor', '2024-01-12', NULL),
+(9, 2, 'Ivan Clark', '2024-02-12', NULL),
+(10, 2, 'Jane Adams', '2024-02-15', NULL);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM LIBRARY_BOOKS ORDER BY BOOK_ID;
+SELECT * FROM BORROWING_RECORDS ORDER BY RECORD_ID;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
 WITH BORROWED_BOOK AS (
   SELECT 
     BOOK_ID, COUNT(*) AS CURRENT_BORROWERS 
@@ -4307,154 +4363,6 @@ FROM
   ) = 0 
 ORDER BY 
   6 DESC, 2 ASC
-```
-
-# [3642. Find Books with Polarized Opinions](https://leetcode.com/problems/find-books-with-polarized-opinions/)
-```
-Table: books
-+-------------+---------+
-| Column Name | Type    |
-+-------------+---------+
-| book_id     | int     |
-| title       | varchar |
-| author      | varchar |
-| genre       | varchar |
-| pages       | int     |
-+-------------+---------+
-book_id is the unique ID for this table.
-Each row contains information about a book including its genre and page count.
-Table: reading_sessions
-
-+----------------+---------+
-| Column Name    | Type    |
-+----------------+---------+
-| session_id     | int     |
-| book_id        | int     |
-| reader_name    | varchar |
-| pages_read     | int     |
-| session_rating | int     |
-+----------------+---------+
-session_id is the unique ID for this table.
-Each row represents a reading session where someone read a portion of a book. session_rating is on a scale of 1-5.
-Write a solution to find books that have polarized opinions - books that receive both very high ratings and very low ratings from different readers.
-
-- A book has polarized opinions if it has at least one rating ≥ 4 and at least one rating ≤ 2
-- Only consider books that have at least 5 reading sessions
-- Calculate the rating spread as (highest_rating - lowest_rating)
-- Calculate the polarization score as the number of extreme ratings (ratings ≤ 2 or ≥ 4) divided by total sessions
-- Only include books where polarization score ≥ 0.6 (at least 60% extreme ratings)
-- Return the result table ordered by polarization score in descending order, then by title in descending order.
-
-The result format is in the following example.
-
-Example:
-
-Input:
-
-books table:
-+---------+------------------------+---------------+----------+-------+
-| book_id | title                  | author        | genre    | pages |
-+---------+------------------------+---------------+----------+-------+
-| 1       | The Great Gatsby       | F. Scott      | Fiction  | 180   |
-| 2       | To Kill a Mockingbird  | Harper Lee    | Fiction  | 281   |
-| 3       | 1984                   | George Orwell | Dystopian| 328   |
-| 4       | Pride and Prejudice    | Jane Austen   | Romance  | 432   |
-| 5       | The Catcher in the Rye | J.D. Salinger | Fiction  | 277   |
-+---------+------------------------+---------------+----------+-------+
-reading_sessions table:
-+------------+---------+-------------+------------+----------------+
-| session_id | book_id | reader_name | pages_read | session_rating |
-+------------+---------+-------------+------------+----------------+
-| 1          | 1       | Alice       | 50         | 5              |
-| 2          | 1       | Bob         | 60         | 1              |
-| 3          | 1       | Carol       | 40         | 4              |
-| 4          | 1       | David       | 30         | 2              |
-| 5          | 1       | Emma        | 45         | 5              |
-| 6          | 2       | Frank       | 80         | 4              |
-| 7          | 2       | Grace       | 70         | 4              |
-| 8          | 2       | Henry       | 90         | 5              |
-| 9          | 2       | Ivy         | 60         | 4              |
-| 10         | 2       | Jack        | 75         | 4              |
-| 11         | 3       | Kate        | 100        | 2              |
-| 12         | 3       | Liam        | 120        | 1              |
-| 13         | 3       | Mia         | 80         | 2              |
-| 14         | 3       | Noah        | 90         | 1              |
-| 15         | 3       | Olivia      | 110        | 4              |
-| 16         | 3       | Paul        | 95         | 5              |
-| 17         | 4       | Quinn       | 150        | 3              |
-| 18         | 4       | Ruby        | 140        | 3              |
-| 19         | 5       | Sam         | 80         | 1              |
-| 20         | 5       | Tara        | 70         | 2              |
-+------------+---------+-------------+------------+----------------+
-Output:
-+---------+------------------+---------------+-----------+-------+---------------+--------------------+
-| book_id | title            | author        | genre     | pages | rating_spread | polarization_score |
-+---------+------------------+---------------+-----------+-------+---------------+--------------------+
-| 1       | The Great Gatsby | F. Scott      | Fiction   | 180   | 4             | 1.00               |
-| 3       | 1984             | George Orwell | Dystopian | 328   | 4             | 1.00               |
-+---------+------------------+---------------+-----------+-------+---------------+--------------------+
-Explanation:
-
-- The Great Gatsby (book_id = 1):
--     Has 5 reading sessions (meets minimum requirement)
--     Ratings: 5, 1, 4, 2, 5
--     Has ratings ≥ 4: 5, 4, 5 (3 sessions)
--     Has ratings ≤ 2: 1, 2 (2 sessions)
--     Rating spread: 5 - 1 = 4
--     Extreme ratings (≤2 or ≥4): All 5 sessions (5, 1, 4, 2, 5)
--     Polarization score: 5/5 = 1.00 (≥ 0.6, qualifies)
-- 1984 (book_id = 3):
--    Has 6 reading sessions (meets minimum requirement)
--    Ratings: 2, 1, 2, 1, 4, 5
--    Has ratings ≥ 4: 4, 5 (2 sessions)
--    Has ratings ≤ 2: 2, 1, 2, 1 (4 sessions)
--    Rating spread: 5 - 1 = 4
--    Extreme ratings (≤2 or ≥4): All 6 sessions (2, 1, 2, 1, 4, 5)
--    Polarization score: 6/6 = 1.00 (≥ 0.6, qualifies)
-Books not included:
-- To Kill a Mockingbird (book_id = 2): All ratings are 4-5, no low ratings (≤2)
-- Pride and Prejudice (book_id = 4): Only 2 sessions (< 5 minimum)
-- The Catcher in the Rye (book_id = 5): Only 2 sessions (< 5 minimum)
-
-The result table is ordered by polarization score in descending order, then by book title in descending order.
-```
-```sql
-WITH POLAR_RATING AS (
-  SELECT 
-    BOOK_ID, 
-    MAX(SESSION_RATING) - MIN(SESSION_RATING) AS RATING_SPREAD, 
-    SUM(
-      CASE WHEN SESSION_RATING >= 4 
-      OR SESSION_RATING <= 2 THEN 1 ELSE 0 END
-    ) * 1.0 / COUNT(SESSION_ID) AS POLARIZATION_SCORE 
-  FROM 
-    READING_SESSIONS 
-  GROUP BY 
-    BOOK_ID 
-  HAVING 
-    SUM(
-      CASE WHEN SESSION_RATING >= 4 THEN 1 ELSE 0 END
-    ) >= 1 
-    AND SUM(
-      CASE WHEN SESSION_RATING <= 2 THEN 1 ELSE 0 END
-    ) >= 1 
-    AND COUNT(SESSION_ID) >= 5
-) 
-SELECT 
-  B.BOOK_ID, 
-  TITLE, 
-  AUTHOR, 
-  GENRE, 
-  PAGES, 
-  RATING_SPREAD, 
-  POLARIZATION_SCORE 
-FROM 
-  BOOKS B 
-  INNER JOIN POLAR_RATING PR ON B.BOOK_ID = PR.BOOK_ID 
-  AND PR.POLARIZATION_SCORE >= 0.6 
-ORDER BY 
-  7 DESC, 
-  2 DESC
 ```
 
 # [511. Game Play Analysis I](https://leetcode.com/problems/game-play-analysis-i/)
@@ -4499,7 +4407,39 @@ Output:
 +-----------+-------------+
 ```
 ```sql
-SELECT PLAYER_ID , MIN(EVENT_DATE) AS FIRST_LOGIN FROM ACTIVITY GROUP BY PLAYER_ID
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS ACTIVITY;
+GO
+CREATE TABLE ACTIVITY (
+    PLAYER_ID INT,
+    DEVICE_ID INT,
+    EVENT_DATE DATE,
+    GAMES_PLAYED INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO ACTIVITY VALUES
+(1, 2, '2016-03-01', 5),
+(1, 2, '2016-05-02', 6),
+(2, 3, '2017-06-25', 1),
+(3, 1, '2016-03-02', 0),
+(3, 4, '2018-07-03', 5);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM ACTIVITY ORDER BY PLAYER_ID, EVENT_DATE;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
+SELECT PLAYER_ID,MIN(EVENT_DATE) AS FIRST_LOGIN 
+FROM ACTIVITY 
+GROUP BY PLAYER_ID
 ```
 
 # [512. Game Play Analysis II](https://leetcode.com/problems/game-play-analysis-ii/)
@@ -4513,12 +4453,19 @@ Table: Activity
 | event_date   | date    |
 | games_played | int     |
 +--------------+---------+
-(player_id, event_date) is the primary key of this table.
-This table shows the activity of players of some game.
-Each row is a record of a player who logged in and played a number of games (possibly 0) before logging out on some day using some device.
- 
-Write a SQL query that reports the device that is first logged in for each player.Games
-The query result format is in the following example:
+(player_id, event_date) is the primary key (combination of columns with unique values) of this table.
+This table shows the activity of players of some games.
+Each row is a record of a player who logged in and played a number of games (possibly 0) before logging out on someday using some device.
+
+Write a solution to report the device that is first logged in for each player.
+
+Return the result table in any order.
+
+The result format is in the following example.
+
+Example 1:
+
+Input: 
 Activity table:
 +-----------+-----------+------------+--------------+
 | player_id | device_id | event_date | games_played |
@@ -4529,7 +4476,7 @@ Activity table:
 | 3         | 1         | 2016-03-02 | 0            |
 | 3         | 4         | 2018-07-03 | 5            |
 +-----------+-----------+------------+--------------+
-Result table:
+Output: 
 +-----------+-----------+
 | player_id | device_id |
 +-----------+-----------+
@@ -4539,32 +4486,51 @@ Result table:
 +-----------+-----------+
 ```
 ```sql
-SELECT
-    PLAYER_ID,
-    DEVICE_ID
-FROM ACTIVITY
-WHERE
-    (PLAYER_ID, EVENT_DATE) IN (
-        SELECT
-            PLAYER_ID,
-            MIN(EVENT_DATE) AS EVENT_DATE
-        FROM ACTIVITY
-        GROUP BY 1
-    );
---------
-WITH
-    T AS (
-        SELECT
-            *,
-            RANK() OVER (
-                PARTITION BY PLAYER_ID
-                ORDER BY EVENT_DATE
-            ) AS RK
-        FROM ACTIVITY
-    )
-SELECT PLAYER_ID, DEVICE_ID
-FROM T
-WHERE RK = 1;
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS ACTIVITY;
+GO
+CREATE TABLE ACTIVITY (
+    PLAYER_ID INT,
+    DEVICE_ID INT,
+    EVENT_DATE DATE,
+    GAMES_PLAYED INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO ACTIVITY VALUES
+(1, 2, '2016-03-01', 5),
+(1, 2, '2016-05-02', 6),
+(2, 3, '2017-06-25', 1),
+(3, 1, '2016-03-02', 0),
+(3, 4, '2018-07-03', 5);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM ACTIVITY ORDER BY PLAYER_ID, EVENT_DATE;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
+WITH 
+  T AS (
+    SELECT 
+      *, 
+      RANK() OVER (PARTITION BY PLAYER_ID ORDER BY EVENT_DATE) AS RK 
+    FROM 
+      ACTIVITY
+  ) 
+SELECT 
+  PLAYER_ID, 
+  DEVICE_ID 
+FROM 
+  T 
+WHERE 
+  RK = 1;
 ```
 
 # [577. Employee Bonus](https://leetcode.com/problems/employee-bonus/)
@@ -4627,7 +4593,50 @@ Output:
 +------+-------+
 ```
 ```sql
-SELECT NAME, BONUS FROM EMPLOYEE E LEFT JOIN BONUS B ON E.EMPID = B.EMPID WHERE B.BONUS < 1000 OR B.BONUS IS NULL
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS BONUS;
+DROP TABLE IF EXISTS EMPLOYEE;
+GO
+CREATE TABLE EMPLOYEE (
+    EMPID INT,
+    NAME VARCHAR(50),
+    SUPERVISOR INT NULL,
+    SALARY INT
+);
+GO
+CREATE TABLE BONUS (
+    EMPID INT,
+    BONUS INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO EMPLOYEE VALUES
+(3, 'Brad', NULL, 4000),
+(1, 'John', 3, 1000),
+(2, 'Dan', 3, 2000),
+(4, 'Thomas', 3, 4000);
+GO
+INSERT INTO BONUS VALUES
+(2, 500),
+(4, 2000);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM EMPLOYEE ORDER BY EMPID;
+SELECT * FROM BONUS ORDER BY EMPID;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
+SELECT NAME, BONUS 
+FROM EMPLOYEE E 
+LEFT JOIN BONUS B ON E.EMPID = B.EMPID 
+WHERE B.BONUS < 1000 OR B.BONUS IS NULL
 ```
 
 # [584. Find Customer Referee](https://leetcode.com/problems/find-customer-referee/)
