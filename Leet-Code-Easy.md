@@ -4029,29 +4029,111 @@ ORDER BY 1;
 # [3415. Find Products with Three Consecutive Digits](https://leetcode.com/problems/find-products-with-three-consecutive-digits/)
 ```
 Table: Products
++-------------+---------+
+| Column Name | Type    |
++-------------+---------+
 | product_id  | int     |
 | name        | varchar |
++-------------+---------+
+product_id is the unique key for this table.
+Each row of this table contains the ID and name of a product.
 
+Write a solution to find all products whose names contain a sequence of exactly three consecutive digits in a row. 
+
+Return the result table ordered by product_id in ascending order.
+
+The result format is in the following example.
+
+Note that the name may contain multiple such sequences, but each should have length three.
+
+Example:
+
+Input:
+
+products table:
++-------------+--------------------+
+| product_id  | name               |
++-------------+--------------------+
+| 1           | ABC123XYZ          |
+| 2           | A12B34C            |
+| 3           | Product56789       |
+| 4           | NoDigitsHere       |
+| 5           | 789Product         |
+| 6           | Item003Description |
+| 7           | Product12X34       |
++-------------+--------------------+
+Output:
++-------------+--------------------+
+| product_id  | name               |
++-------------+--------------------+
+| 1           | ABC123XYZ          |
+| 5           | 789Product         |
+| 6           | Item003Description |
++-------------+--------------------+
 Explanation:
 
-Product 1: ABC123XYZ contains the digits 123.
-Product 5: 789Product contains the digits 789.
-Product 6: Item003Description contains 003, which is exactly three digits.
+- Product 1: ABC123XYZ contains the digits 123.
+- Product 5: 789Product contains the digits 789.
+- Product 6: Item003Description contains 003, which is exactly three digits.
 
 Note:
-
 Results are ordered by product_id in ascending order.
 Only products with exactly three consecutive digits in their names are included in the result.
 ```
 ```sql
-SELECT PRODUCT_ID, NAME
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS PRODUCTS;
+GO
+CREATE TABLE PRODUCTS (
+    PRODUCT_ID INT,
+    NAME VARCHAR(100)
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO PRODUCTS VALUES
+(1, 'ABC123XYZ'),
+(2, 'A12B34C'),
+(3, 'Product56789'),
+(4, 'NoDigitsHere'),
+(5, '789Product'),
+(6, 'Item003Description'),
+(7, 'Product12X34');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM PRODUCTS ORDER BY PRODUCT_ID;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
+SELECT
+    PRODUCT_ID,
+    NAME
 FROM PRODUCTS
 WHERE
-    (NAME LIKE '%[0-9][0-9][0-9]%'  -- CONTAINS AT LEAST THREE CONSECUTIVE DIGITS
-    AND NAME NOT LIKE '%[0-9][0-9][0-9][0-9]%') -- BUT NOT FOUR OR MORE CONSECUTIVE DIGITS
-    OR NAME LIKE '[0-9][0-9][0-9]%' -- STARTS WITH EXACTLY THREE DIGITS
-    OR NAME LIKE '%[0-9][0-9][0-9]' -- ENDS WITH EXACTLY THREE DIGITS
-ORDER BY PRODUCT_ID;
+    NAME LIKE '%[0-9][0-9][0-9]%'
+    -- Product name contains at least one sequence of three consecutive digit
+    AND NAME NOT LIKE '%[0-9][0-9][0-9][0-9]%'
+    -- Product name does not contain a sequence of four consecutive digits
+ORDER BY
+    PRODUCT_ID;
+----------------------------------------------------------------------------
+SELECT
+    PRODUCT_ID,
+    NAME
+FROM PRODUCTS
+WHERE
+    PATINDEX('%[0-9][0-9][0-9]%', NAME) > 0
+    -- Product name contains at least one occurrence of three consecutive digit
+    AND PATINDEX('%[0-9][0-9][0-9][0-9]%', NAME) = 0
+    -- Product name does not contain four or more consecutive digits anywhere
+ORDER BY
+    PRODUCT_ID;
 ```
 
 # [3436. Find Valid Emails](https://leetcode.com/problems/find-valid-emails/)
@@ -4065,12 +4147,14 @@ Table: Users
 +-----------------+---------+
 (user_id) is the unique key for this table.
 Each row contains a user's unique ID and email address.
+
 Write a solution to find all the valid email addresses. A valid email address meets the following criteria:
 
-It contains exactly one @ symbol.
-It ends with .com.
-The part before the @ symbol contains only alphanumeric characters and underscores.
-The part after the @ symbol and before .com contains a domain name that contains only letters.
+- It contains exactly one @ symbol.
+- It ends with .com.
+- The part before the @ symbol contains only alphanumeric characters and underscores.
+- The part after the @ symbol and before .com contains a domain name that contains only letters.
+
 Return the result table ordered by user_id in ascending order.
 
 Example:
@@ -4096,24 +4180,54 @@ Output:
 
 Explanation:
 
-alice@example.com is valid because it contains one @, alice is alphanumeric, and example.com starts with a letter and ends with .com.
-bob_at_example.com is invalid because it contains an underscore instead of an @.
-charlie@example.net is invalid because the domain does not end with .com.
-david@domain.com is valid because it meets all criteria.
-eve@invalid is invalid because the domain does not end with .com.
+- alice@example.com is valid because it contains one @, alice is alphanumeric, and example.com starts with a letter and ends with .com.
+- bob_at_example.com is invalid because it contains an underscore instead of an @.
+- charlie@example.net is invalid because the domain does not end with .com.
+- david@domain.com is valid because it meets all criteria.
+- eve@invalid is invalid because the domain does not end with .com.
+
 Result table is ordered by user_id in ascending order.
 ```
 ```sql
-SELECT * FROM USERS
-WHERE UPPER(EMAIL) LIKE '%@%.COM' AND UPPER(EMAIL) NOT LIKE '%[^0-9A-Z_]%@%.COM' AND UPPER(EMAIL) NOT LIKE '%@%[^A-Z]%.COM'
-ORDER BY USER_ID
----
-SELECT *
-FROM USERS
-WHERE UPPER(EMAIL) LIKE '%@%.COM'
-  AND PATINDEX('%[^0-9A-Z_]%@%.COM', UPPER(EMAIL)) = 0
-  AND PATINDEX('%@%[^A-Z]%.COM%', UPPER(EMAIL)) = 0
-ORDER BY USER_ID;
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS USERS;
+GO
+CREATE TABLE USERS (
+    USER_ID INT,
+    EMAIL VARCHAR(100)
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO USERS VALUES
+(1, 'alice@example.com'),
+(2, 'bob_at_example.com'),
+(3, 'charlie@example.net'),
+(4, 'david@domain.com'),
+(5, 'eve@invalid');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM USERS ORDER BY USER_ID;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
+SELECT 
+  * 
+FROM 
+  USERS 
+WHERE 
+  UPPER(EMAIL) LIKE '%@%.COM' 
+  AND UPPER(EMAIL) NOT LIKE '%[^0-9A-Z_]%@%.COM' 
+  AND UPPER(EMAIL) NOT LIKE '%@%[^A-Z]%.COM' 
+  AND UPPER(EMAIL) LIKE '%_%@%_%.COM' 
+ORDER BY 
+  USER_ID;
 ```
 
 # [3465. Find Products with Valid Serial Numbers](https://leetcode.com/problems/find-products-with-valid-serial-numbers/)
@@ -4128,12 +4242,14 @@ Table: products
 +--------------+------------+
 (product_id) is the unique key for this table.
 Each row in the table represents a product with its unique ID, name, and description.
+
 Write a solution to find all products whose description contains a valid serial number pattern. A valid serial number follows these rules:
 
-It starts with the letters SN (case-sensitive).
-Followed by exactly 4 digits.
-It must have a hyphen (-) followed by exactly 4 digits.
-The serial number must be within the description (it may not necessarily start at the beginning).
+- It starts with the letters SN (case-sensitive).
+- Followed by exactly 4 digits.
+- It must have a hyphen (-) followed by exactly 4 digits.
+- The serial number must be within the description (it may not necessarily start at the beginning).
+
 Return the result table ordered by product_id in ascending order.
 
 The result format is in the following example.
@@ -4143,7 +4259,6 @@ Example:
 Input:
 
 products table:
-
 +------------+--------------+------------------------------------------------------+
 | product_id | product_name | description                                          |
 +------------+--------------+------------------------------------------------------+
@@ -4155,7 +4270,6 @@ products table:
 +------------+--------------+------------------------------------------------------+
     
 Output:
-
 +------------+--------------+------------------------------------------------------+
 | product_id | product_name | description                                          |
 +------------+--------------+------------------------------------------------------+
@@ -4165,7 +4279,6 @@ Output:
 +------------+--------------+------------------------------------------------------+
     
 Explanation:
-
 Product 1: Valid serial number SN1234-5678
 Product 2: Valid serial number SN9876-1234
 Product 3: Invalid serial number SN1234-56789 (contains 5 digits after the hyphen)
@@ -4174,20 +4287,45 @@ Product 5: Valid serial number SN4321-8765
 The result table is ordered by product_id in ascending order.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS PRODUCTS;
+GO
+CREATE TABLE PRODUCTS (
+    PRODUCT_ID INT,
+    PRODUCT_NAME VARCHAR(50),
+    DESCRIPTION VARCHAR(500)
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO PRODUCTS VALUES
+(1, 'Widget A', 'This is a sample product with SN1234-5678'),
+(2, 'Widget B', 'A product with serial SN9876-1234 in the description'),
+(3, 'Widget C', 'Product SN1234-56789 is available now'),
+(4, 'Widget D', 'No serial number here'),
+(5, 'Widget E', 'Check out SN4321-8765 in this description');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM PRODUCTS ORDER BY PRODUCT_ID;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
 SELECT *
 FROM PRODUCTS
 WHERE
-    -- Condition 1: Matches serial numbers at the beginning of the string, followed by a space.
-    -- Example: 'SN1234-5678 Some other text'
     DESCRIPTION LIKE 'SN[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] %' COLLATE Latin1_General_BIN
     OR 
-    -- Condition 2: Matches serial numbers that are in the middle of the string, with a space on either side.
-    -- Example: 'Some other text SN1234-5678 Some other text'
     DESCRIPTION LIKE '% SN[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] %' COLLATE Latin1_General_BIN
     OR 
-    -- Condition 3: Matches serial numbers at the very end of the string, preceded by a space.
-    -- Example: 'Some other text SN1234-5678'
     DESCRIPTION LIKE '% SN[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]' COLLATE Latin1_General_BIN
+    OR 
+    DESCRIPTION LIKE 'SN[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]' COLLATE Latin1_General_BIN
 ORDER BY 1 ASC;
 ```
 
