@@ -3880,25 +3880,87 @@ ORDER BY
 ```
 Table: cities
 +-------------+---------+
+| Column Name | Type    | 
++-------------+---------+
 | state       | varchar |
 | city        | varchar |
 +-------------+---------+
+(state, city) is the primary key (combination of columns with unique values) for this table.
+Each row of this table contains the state name and the city name within that state.
 
+Write a solution to find all the cities in each state and combine them into a single comma-separated string.
+
+Return the result table ordered by state and city in ascending order.
+
+The result format is in the following example.
+
+Example:
+
+Input:
+
+cities table:
++-------------+---------------+
+| state       | city          |
++-------------+---------------+
+| California  | Los Angeles   |
+| California  | San Francisco |
+| California  | San Diego     |
+| Texas       | Houston       |
+| Texas       | Austin        |
+| Texas       | Dallas        |
+| New York    | New York City |
+| New York    | Buffalo       |
+| New York    | Rochester     |
++-------------+---------------+
 Output:
 +-------------+---------------------------------------+
-| state       | city                                  |
-+-------------+--------------------------------------+
+| state       | cities                                |
++-------------+---------------------------------------+
 | California  | Los Angeles, San Diego, San Francisco |
 | New York    | Buffalo, New York City, Rochester     |
 | Texas       | Austin, Dallas, Houston               |
 +-------------+---------------------------------------+
 Explanation:
 
-California: All cities ("Los Angeles", "San Diego", "San Francisco") are listed in a comma-separated string.
-New York: All cities ("Buffalo", "New York City", "Rochester") are listed in a comma-separated string.
-Texas: All cities ("Austin", "Dallas", "Houston") are listed in a comma-separated string.
+- California: All cities ("Los Angeles", "San Diego", "San Francisco") are listed in a comma-separated string.
+- New York: All cities ("Buffalo", "New York City", "Rochester") are listed in a comma-separated string.
+- Texas: All cities ("Austin", "Dallas", "Houston") are listed in a comma-separated string.
+
+Note: The output table is ordered by the state name in ascending order.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS CITIES;
+GO
+CREATE TABLE CITIES (
+    STATE VARCHAR(50),
+    CITY VARCHAR(50)
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO CITIES VALUES
+('California', 'Los Angeles'),
+('California', 'San Francisco'),
+('California', 'San Diego'),
+('Texas', 'Houston'),
+('Texas', 'Austin'),
+('Texas', 'Dallas'),
+('New York', 'New York City'),
+('New York', 'Buffalo'),
+('New York', 'Rochester');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM CITIES ORDER BY STATE, CITY;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
 SELECT
     STATE,
     STRING_AGG(CITY, ', ') WITHIN GROUP (ORDER BY CITY) AS CITIES
@@ -3922,12 +3984,15 @@ Table: TeamStats
 +------------------+---------+
 team_id is the unique key for this table.
 This table contains team id, team name, matches_played, wins, draws, and losses.
+
 Write a solution to calculate the points and rank for each team in the league. Points are calculated as follows:
 
-3 points for a win
-1 point for a draw
-0 points for a loss
+- 3 points for a win
+- 1 point for a draw
+- 0 points for a loss
+
 Note: Teams with the same points must be assigned the same rank.
+
 Return the result table ordered by points in descending, and then by team_name in ascending order.
 The query result format is in the following example.
 
@@ -3955,13 +4020,46 @@ Output:
 +---------+-----------------+--------+----------+
 Explanation:
 
-Manchester City and Liverpool both have 20 points (6 wins * 3 points + 2 draws * 1 point), so they share position 1.
-Chelsea has 18 points (5 wins * 3 points + 3 draws * 1 point) and is position 3rd.
-Arsenal has 16 points (4 wins * 3 points + 4 draws * 1 point) and is position 4th.
-Tottenham has 14 points (3 wins * 3 points + 5 draws * 1 point) and is position 5th.
+- Manchester City and Liverpool both have 20 points (6 wins * 3 points + 2 draws * 1 point), so they share position 1.
+- Chelsea has 18 points (5 wins * 3 points + 3 draws * 1 point) and is position 3rd.
+- Arsenal has 16 points (4 wins * 3 points + 4 draws * 1 point) and is position 4th.
+- Tottenham has 14 points (3 wins * 3 points + 5 draws * 1 point) and is position 5th.
+
 The output table is ordered by points in descending order, then by team_name in ascending order.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS TEAMSTATS;
+GO
+CREATE TABLE TEAMSTATS (
+    TEAM_ID INT,
+    TEAM_NAME VARCHAR(100),
+    MATCHES_PLAYED INT,
+    WINS INT,
+    DRAWS INT,
+    LOSSES INT
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO TEAMSTATS VALUES
+(1, 'Manchester City', 10, 6, 2, 2),
+(2, 'Liverpool', 10, 6, 2, 2),
+(3, 'Chelsea', 10, 5, 3, 2),
+(4, 'Arsenal', 10, 4, 4, 2),
+(5, 'Tottenham', 10, 3, 5, 2);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM TEAMSTATS ORDER BY TEAM_ID;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
 SELECT
     TEAM_ID,
     TEAM_NAME,
@@ -3974,20 +4072,23 @@ ORDER BY POINTS DESC, TEAM_NAME;
 # [3358. Books with NULL Ratings](https://leetcode.com/problems/books-with-null-ratings/)
 ```
 Table: books
-
++----------------+---------+
 | Column Name    | Type    |
++----------------+---------+
 | book_id        | int     |
 | title          | varchar |
 | author         | varchar |
 | published_year | int     |
 | rating         | decimal |
-
++----------------+---------+
 book_id is the unique key for this table.
 Each row of this table contains information about a book including its unique ID, title, author, publication year, and rating.
 rating can be NULL, indicating that the book hasn't been rated yet.
-Write a solution to find all  books that have not been rated yet (i.e., have a NULL rating).
+
+Write a solution to find all books that have not been rated yet (i.e., have a NULL rating).
 
 Return the result table ordered by book_id in ascending order.
+
 The result format is in the following example.
 
 Example:
@@ -3995,31 +4096,65 @@ Example:
 Input:
 
 books table:
-
++---------+------------------------+------------------+----------------+--------+
 | book_id | title                  | author           | published_year | rating |
++---------+------------------------+------------------+----------------+--------+
 | 1       | The Great Gatsby       | F. Scott         | 1925           | 4.5    |
 | 2       | To Kill a Mockingbird  | Harper Lee       | 1960           | NULL   |
 | 3       | Pride and Prejudice    | Jane Austen      | 1813           | 4.8    |
 | 4       | The Catcher in the Rye | J.D. Salinger    | 1951           | NULL   |
 | 5       | Animal Farm            | George Orwell    | 1945           | 4.2    |
 | 6       | Lord of the Flies      | William Golding  | 1954           | NULL   |
-
++---------+------------------------+------------------+----------------+--------+
 Output:
-
++---------+------------------------+------------------+----------------+
 | book_id | title                  | author           | published_year |
++---------+------------------------+------------------+----------------+
 | 2       | To Kill a Mockingbird  | Harper Lee       | 1960           |
 | 4       | The Catcher in the Rye | J.D. Salinger    | 1951           |
 | 6       | Lord of the Flies      | William Golding  | 1954           |
-
++---------+------------------------+------------------+----------------+
 Explanation:
 
-The books with book_id 2, 4, and 6 have NULL ratings.
-These books are included in the result table.
-The other books (book_id 1, 3, and 5) have ratings and are not included.
-Bookshelves
+- The books with book_id 2, 4, and 6 have NULL ratings.
+- These books are included in the result table.
+- The other books (book_id 1, 3, and 5) have ratings and are not included.
+
 The result is ordered by book_id in ascending order
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS BOOKS;
+GO
+CREATE TABLE BOOKS (
+    BOOK_ID INT,
+    TITLE VARCHAR(100),
+    AUTHOR VARCHAR(100),
+    PUBLISHED_YEAR INT,
+    RATING DECIMAL(3,1) NULL
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO BOOKS VALUES
+(1, 'The Great Gatsby', 'F. Scott', 1925, 4.5),
+(2, 'To Kill a Mockingbird', 'Harper Lee', 1960, NULL),
+(3, 'Pride and Prejudice', 'Jane Austen', 1813, 4.8),
+(4, 'The Catcher in the Rye', 'J.D. Salinger', 1951, NULL),
+(5, 'Animal Farm', 'George Orwell', 1945, 4.2),
+(6, 'Lord of the Flies', 'William Golding', 1954, NULL);
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM BOOKS ORDER BY BOOK_ID;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
 SELECT BOOK_ID, TITLE, AUTHOR, PUBLISHED_YEAR
 FROM BOOKS
 WHERE RATING IS NULL
