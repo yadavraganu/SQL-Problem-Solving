@@ -3701,6 +3701,7 @@ Table: Emails
 +-------------+---------+
 id is the primary key (column with unique values) for this table.
 Each row of this table contains an email. The emails will not contain uppercase letters.
+
 Write a solution to find all unique email domains and count the number of individuals associated with each domain. Consider only those domains that end with .com.
 
 Return the result table orderd by email domains in ascending order.
@@ -3731,6 +3732,35 @@ Explanation:
 Output table is ordered by email_domains in ascending order.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS EMAILS;
+GO
+CREATE TABLE EMAILS (
+    ID INT,
+    EMAIL VARCHAR(100)
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO EMAILS VALUES
+(336, 'hwkiy@test.edu'),
+(489, 'adcmaf@outlook.com'),
+(449, 'vrzmwyum@yahoo.com'),
+(95, 'tof@test.edu'),
+(320, 'jxhbagkpm@example.org'),
+(411, 'zxcf@outlook.com');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM EMAILS ORDER BY ID;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
 SELECT
   SUBSTRING(EMAIL, CHARINDEX('@', EMAIL) + 1, LEN(EMAIL)) AS EMAIL_DOMAIN,
   COUNT(*) AS COUNT
@@ -3755,11 +3785,12 @@ Table: Tweets
 +----------------+---------+
 tweet_id is the primary key (column with unique values) for this table.
 This table contains all the tweets in a social media app.
+
 Write a solution to find invalid tweets. A tweet is considered invalid if it meets any of the following criteria:
 
-It exceeds 140 characters in length.
-It has more than 3 mentions.
-It includes more than 3 hashtags.
+- It exceeds 140 characters in length.
+- It has more than 3 mentions.
+- It includes more than 3 hashtags.
 
 Return the result table ordered by tweet_id in ascending order.
 The result format is in the following example.
@@ -3783,11 +3814,37 @@ Output:
 +----+
  
 Explanation:
-tweet_id 1 contains 4 mentions.
-tweet_id 4 contains 4 hashtags.
+- tweet_id 1 contains 4 mentions.
+- tweet_id 4 contains 4 hashtags.
 Output table is ordered by tweet_id in ascending order.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLE
+*******************************************************************************/
+DROP TABLE IF EXISTS TWEETS;
+GO
+CREATE TABLE TWEETS (
+    TWEET_ID INT,
+    CONTENT VARCHAR(1000)
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO TWEETS VALUES
+(1, 'Traveling, exploring, and living my best life @JaneSmith @SaraJohnson @LisaTaylor @MikeBrown #Foodie #Fitness #Learning'),
+(2, 'Just had the best dinner with friends! #Foodie #Friends #Fun'),
+(4, 'Working hard on my new project #Work #Goals #Productivity #Fun');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM TWEETS ORDER BY TWEET_ID;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
 SELECT
   TWEET_ID
 FROM
@@ -3864,6 +3921,47 @@ User with user_id 7005 and email_id 234 signed up on 2022-08-20 10:00:00 and ver
 User with user_id 7771 and email_id 125 signed up on 2022-06-14 09:30:00 and verified on second day of the signup.
 ```
 ```sql
+/*******************************************************************************
+1. SETUP: CLEAN UP AND RECREATE TABLES
+*******************************************************************************/
+DROP TABLE IF EXISTS TEXTS;
+DROP TABLE IF EXISTS EMAILS;
+GO
+CREATE TABLE EMAILS (
+    EMAIL_ID INT,
+    USER_ID INT,
+    SIGNUP_DATE DATETIME
+);
+GO
+CREATE TABLE TEXTS (
+    TEXT_ID INT,
+    EMAIL_ID INT,
+    SIGNUP_ACTION VARCHAR(20),
+    ACTION_DATE DATETIME
+);
+GO
+/*******************************************************************************
+2. DATA ENTRY: INSERT SAMPLE DATA
+*******************************************************************************/
+INSERT INTO EMAILS VALUES
+(125, 7771, '2022-06-14 09:30:00'),
+(433, 1052, '2022-07-09 08:15:00'),
+(234, 7005, '2022-08-20 10:00:00');
+GO
+INSERT INTO TEXTS VALUES
+(1, 125, 'Verified', '2022-06-15 08:30:00'),
+(2, 433, 'Not Verified', '2022-07-10 10:45:00'),
+(4, 234, 'Verified', '2022-08-21 09:30:00');
+GO
+/*******************************************************************************
+3. DISPLAY INPUT DATA
+*******************************************************************************/
+SELECT * FROM EMAILS ORDER BY EMAIL_ID;
+SELECT * FROM TEXTS ORDER BY TEXT_ID;
+GO
+/*******************************************************************************
+4. Solution
+*******************************************************************************/
 SELECT
   E.USER_ID
 FROM
